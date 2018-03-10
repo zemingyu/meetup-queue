@@ -97,13 +97,15 @@ contract MeetupBase is MeetupAccessControl {
         // returns (bool)
     {
         require(users[_userName] == msg.sender);
-        require(users[_userName] != address(0));
+        require(users[_userName] != address(0));        
 
         uint256 _meetupId = meetups.length -1
         Meetup memory _meetup = meetups[_meetupId];
-        
 
-        // Check if already joined
+        // Can't join a meetup that has already started.
+        require(now < _meetup.startTime);        
+
+        // Can't join twice
         for (uint i = 0; i < _meetup.registrationList.length, i++) {
             if (_meetup.registrationList[i] == msg.sender) {
                 revert();
