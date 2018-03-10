@@ -1,8 +1,9 @@
-# Meetup Queueing System on a Block Chain
+# Meetup Queueing System on a Blockchain
 A queueing system on the blockchain for meetups
 
-## Issues/ Questions
-Each meetup event should be a separate contract?
+## Discussion Questions
+MVP: just build the meetup mechanism to start with
+
 
 ## Purpose
 
@@ -101,3 +102,6 @@ The pupose is to store the information relating to the event
 - Date and time 
 - Maximum capacity 
 - Late cancellation period
+
+## Boilderplate
+http://truffleframework.com/boxes/react-uport
