@@ -103,5 +103,13 @@
   },
   "eslintConfig": {
     "extends": "react-app"
-  }
+  },
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
 }
