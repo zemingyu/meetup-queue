@@ -1,15 +1,39 @@
 # Meetup Queueing System on a Block Chain
 A queueing system on the blockchain for meetups
 
-## Purpose
-
-To allocate meetup spots in a fully transparent manner using smart contracts the ethereum blockchain
-
-
-## Desgin questions
+## Issues/ Questions
 Each meetup event should be a separate contract?
 
+## Purpose
+
+To allocate meetup spots in a fully transparent manner using smart contracts the ethereum blockchain 
+Reward people for regular attendance and contribution 
+Penalise people for late cancellation and no show's
+
 ## Verification
+
+#### Initial registration
+
+We need to move the meetup account database onto the blockchain
+
+*Steps*
+
+Create a master list of meetup account ID's based on the meetup website 
+Users need to set up a new Ethereum account and get free Ropsten ETH (details to be followed) 
+Users go to the website and register using their meetup account name 
+Users can also deregister them selves in case of mistakes 
+Contract owners can deregister users (e.g. when someone accidentally registers another user's account)  
+
+#### Register for individual meetup events
+
+Accounts are checked against the masterlist
+
+#### Verification at the door
+
+There'll be a smart phone app that users can store their Ethereum public address and present it as QR codes 
+Before each meetup, the organisers will need to use an app to scan users QR codes 
+Only registered people are allowed to enter 
+
 
 ## Point Allocation
 #### Earn points (non-event)
@@ -23,40 +47,46 @@ Each meetup event should be a separate contract?
 - Show up: +10 
 
 #### How to lose points
-- no show, no cancellation (or cancellation after event start time): -50
-- late penalty:
-more than 24 hours before the event: 0 
-12 - 24 hours before the event: -2 
-6 – 12 hours: -5 
-3 – 6 hours: -10 
-0 - 3 hours: -15 
+no show, no cancellation (or cancellation after event start time): -50
+late penalty:
+- more than 24 hours before the event: 0 
+- 12 - 24 hours before the event: -2 
+- 6 – 12 hours: -5 
+- 3 – 6 hours: -10 
+- 0 - 3 hours: -15 
 
 ## Queueing system
-Based on total points
+Based on total points 
 Waiting list also ranked by points, not by when you register
+Use registration order for tie-breaks
 
 ## Last minute auction system
-Spots freed up in the last 3 hours are available for auctions
+Spots freed up in the last 3 hours are available for auctions 
 Auction the spots with your points
-
 
 ## Smart contract design
 
+### Contract 1 - master contract
+
 #### Variables
-Meetup owner – multip owners, allow transfers
-Meetup acconts - Array of addresses, mapped to meetup names
-
-Meetup event
-Organiser
-Assistants
-Presnenters
-Date and time
-Maximum capacity
-Late cancellation period
-
+Meetup owner – multip owners, allow transfers 
+Meetup acconts - Array of addresses, mapped to meetup names 
+Array of meetup events (contract addresses) 
 
 ####  Functions
-Add account
-Create a new meetup event – ownly owners can do this
+Add account  
+Create a new meetup event – ownly owners can do this 
 
 
+### Contract 2 - one contract for each meetup up event
+
+The pupose is to store the information relating to the event
+
+#### Variables
+*Meetup event (struct)* 
+Organiser 
+Assistants 
+Presnenters 
+Date and time 
+Maximum capacity 
+Late cancellation period
