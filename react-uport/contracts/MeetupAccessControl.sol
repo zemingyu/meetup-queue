@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.18;
 
 
 // Based on https://github.com/axiomzen/cryptokitties-bounty/blob/master/contracts/KittyAccessControl.sol
