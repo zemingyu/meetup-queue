@@ -7,6 +7,7 @@ import "./MeetupAccessControl.sol";
 // Based on
 // https://github.com/axiomzen/cryptokitties-bounty/blob/master/contracts/KittyBase.sol
 // https://monax.io/docs/solidity/solidity_1_the_five_types_model/
+
 contract MeetupBase is MeetupAccessControl {
     /*** EVENTS ***/
 
@@ -69,55 +70,61 @@ contract MeetupBase is MeetupAccessControl {
     function createMeetup (            
         uint64 _timeUntilMeetup,        
         uint8 _maxCapacity,       
-        address[] _presenters,
+        address[] _presenters
     )
         public
         onlyAssistant() 
         returns (uint256)
     {
 
+        address[] memory _registrationList;
+        
         Meetup memory _meetup = Meetup({            
             birthTime: uint64(now),
-            startTime: birthTime + uint64(_timeUntilMeetup),            
+            startTime: uint64(now + _timeUntilMeetup),            
             maxCapacity: _maxCapacity,
             presenters: _presenters,
-            registrationList: address[]
+            registrationList: _registrationList
         });
 
         uint256 newMeetupId = meetups.push(_meetup) - 1 ;
 
         // emit the birth event
-        event Birth(_timeUntilMeetup, _maxCapacity);
+        emit Birth(_timeUntilMeetup, _maxCapacity);
 
         return newMeetupId;
     }
 
-    function joinNextMeetup (string _userName)
+    function joinNextMeetup (bytes32 _userName)
         public        
         // returns (bool)
     {
         require(users[_userName] == msg.sender);
         require(users[_userName] != address(0));        
 
-        uint256 _meetupId = meetups.length -1
+        uint256 _meetupId = meetups.length -1;
         Meetup memory _meetup = meetups[_meetupId];
 
         // Can't join a meetup that has already started.
         require(now < _meetup.startTime);        
 
         // Can't join twice
-        for (uint i = 0; i < _meetup.registrationList.length, i++) {
+        for (uint i = 0; i < _meetup.registrationList.length; i++) {
             if (_meetup.registrationList[i] == msg.sender) {
                 revert();
             }
         }      
 
+        
         _meetup.registrationList.push(msg.sender);
 
     }
   
 
 }
+
+
+
 
 
 // list of meetup members: 

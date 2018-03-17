@@ -8,6 +8,7 @@ contract MeetupAccessControl {
   address public organiserAddress;
   address public assistantAddress_1;
   address public assistantAddress_2;
+  bool paused = false;
 
   /// Access modifier for organiser-only functionality
   modifier onlyOrganiser() {
@@ -26,7 +27,7 @@ contract MeetupAccessControl {
   }
 
   /// @dev Assigns a new address to act as the assistant. Only available to the current CEO.
-  /// @param assistantAddress_1 The address of the new assistant
+  /// @param _newAssistant The address of the new assistant
   function setAssistant_1(address _newAssistant) public onlyAssistant {
       require(_newAssistant != address(0));
 
@@ -34,8 +35,8 @@ contract MeetupAccessControl {
   }
 
   /// @dev Assigns a new address to act as the assistant. Only available to the current CEO.
-  /// @param assistantAddress_2 The address of the new assistant
-  function setAssistant_1(address _newAssistant) public onlyAssistant {
+  /// @param _newAssistant The address of the new assistant
+  function setAssistant_2(address _newAssistant) public onlyAssistant {
       require(_newAssistant != address(0));
 
       assistantAddress_2 = _newAssistant;

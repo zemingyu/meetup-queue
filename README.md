@@ -8,7 +8,9 @@ MVP: just build the meetup mechanism to start with
 ## Purpose
 
 To allocate meetup spots in a fully transparent manner using smart contracts the ethereum blockchain 
+
 Reward people for regular attendance and contribution 
+
 Penalise people for late cancellation and no show's
 
 ## Background
