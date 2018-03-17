@@ -1,9 +1,10 @@
 # Meetup Queueing System on a Blockchain
+
 A queueing system on the blockchain for meetups
 
 ## Discussion Questions
-MVP: just build the meetup mechanism to start with
 
+MVP: just build the meetup mechanism to start with
 
 ## Purpose
 
@@ -28,7 +29,7 @@ Penalise people for late cancellation and no show's
 
 #### Initial registration
 
-We need to move the meetup account database onto the blockchain
+We need to move the meetup account database or a form of identity based on it onto the blockchain.
 
 **Steps**
 
