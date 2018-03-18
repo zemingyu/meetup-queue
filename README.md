@@ -2,6 +2,14 @@
 
 A queueing system on the blockchain for meetups
 
+---
+
+# Table of Contents
+  * [About](#chapter-0)
+  * [Setup Instructions](#chapter-10)
+
+# About <a id="chapter-0"></a>
+
 ## Discussion Questions
 
 MVP: just build the meetup mechanism to start with
@@ -48,7 +56,6 @@ Accounts are checked against the masterlist
 - There'll be a smart phone app that users can store their Ethereum public address and present it as QR codes 
 - Before each meetup, the organisers will need to use an app to scan users QR codes 
 - Only registered people are allowed to enter 
-
 
 ## Point incentives
 #### Earn points (non-event)
@@ -108,3 +115,86 @@ The pupose is to store the information relating to the event
 
 ## Boilderplate
 http://truffleframework.com/boxes/react-uport
+
+
+# Setup Instructions <a id="chapter-10"></a>
+
+## Prerequisites
+
+* Install Node.js 9.x.x with [NVM](https://github.com/creationix/nvm)
+
+## Development - Installation and Building
+
+* Install Truffle, Ganache CLI ethereum client for local development, and Yarn
+
+```bash
+npm install -g truffle ganache-cli;
+brew install yarn
+```
+
+* Install the node dependencies.
+
+```bash
+yarn install
+```
+
+* Run Ganache CLI.
+
+```bash
+ganache-cli \
+  --port="7545" \
+  --mnemonic "obey flight jump bean salt female logic inside sugar case venture media" \
+  --verbose \
+  --networkId=1000 \
+  --gasLimit=7984452 \
+  --gasPrice=2000000000;
+```
+
+* Compile and migrate the contracts.
+
+```bash
+truffle compile;
+truffle migrate --network development
+```
+
+* Run Webpack server for front-end hot reloading
+    * Note: Smart contract changes must be manually recompiled and migrated.
+
+```bash
+yarn start
+```
+
+* Debug (use Truffle Console after starting Ganache CLI in a separate tab)
+
+```
+truffle console
+truffle(development)> for (var i in web3.eth.accounts) { console.log(web3.eth.getBalance(web3.eth.accounts[i])) }
+```
+
+## Testing
+
+#### React Components
+
+* Jest used to test React components using Truffle
+
+```bash
+truffle compile;
+truffle migrate --network development;
+yarn test
+```
+
+#### Smart Contracts
+
+Truffle used to test Smart Contracts
+
+```bash
+truffle compile;
+truffle migrate --network development;
+truffle test
+```
+
+## Production
+
+```bash
+yarn build
+```
