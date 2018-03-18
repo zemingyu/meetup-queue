@@ -73,8 +73,15 @@ contract MeetupBase is MeetupAccessControl {
         }
     }
 
-    // Unregister the provided name with the caller address.
-    function unregisterUser(bytes32 name) public {        
+    // Deregister the provided name with the caller address.
+    // Only user him/herself or assistants can deregister a user
+    function deregisterUser(bytes32 name) public onlyAssistant {        
+        // require(
+        //     msg.sender == users[name] ||
+        //     msg.sender == organiserAddress ||
+        //     msg.sender == assistantAddress_1 ||
+        //     msg.sender == assistantAddress_2
+        // );
         if(users[name] != 0 && name != ""){
             users[name] = 0x0;
         }
