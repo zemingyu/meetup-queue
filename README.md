@@ -132,6 +132,12 @@ npm install -g truffle ganache-cli;
 brew install yarn
 ```
 
+* Change into the project directory
+
+```bash
+cd react-uport/
+```
+
 * Install the node dependencies.
 
 ```bash
