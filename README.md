@@ -125,6 +125,8 @@ http://truffleframework.com/boxes/react-uport
 
 ## Development - Installation and Building
 
+### Alternative 1
+
 * Install Truffle, Ganache CLI ethereum client for local development, and Yarn
 
 ```bash
@@ -176,6 +178,13 @@ yarn start
 truffle console
 truffle(development)> for (var i in web3.eth.accounts) { console.log(web3.eth.getBalance(web3.eth.accounts[i])) }
 ```
+
+### Alternative 2
+
+Go to [ganache github](https://github.com/trufflesuite/ganache/releases) and install v1.1.0-beta.1 - Candy Apple
+
+Note: the latest stable release crashes frequently and does not give consistent results
+
 
 ## Testing
 
