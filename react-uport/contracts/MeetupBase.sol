@@ -40,7 +40,7 @@ contract MeetupBase is MeetupAccessControl {
     /*** STORAGE ***/
 
     /// @dev An array containing the Meetup struct for all Meetups in existence. 
-    Meetup[] meetups;
+    Meetup[] public meetups;
 
     /// @dev A mapping from user address to points
     mapping (address => int256) public userToPoints;
