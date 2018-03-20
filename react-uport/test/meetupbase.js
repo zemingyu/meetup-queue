@@ -76,15 +76,23 @@ contract('MeetupBase', function([admin, organiser, assistant1, assistant2,
     it('allows people to join the meetup event', async () => {
       // setup an event in 1 week's time
       beforeCount = await meetupBaseInstance.getMeetupCount();
-      await meetupBaseInstance.createMeetup(60*60*24*7, 3, [organiser, presenter1, anyone], {from: organiser});
+      await meetupBaseInstance.createMeetup(60*60*24*7, 4, [organiser, presenter1, anyone], {from: organiser});
       afterCount = await meetupBaseInstance.getMeetupCount();
       assert.equal(beforeCount.toNumber(), afterCount.toNumber()-1);
 
-      mt = (await meetupBaseInstance.meetups.call(0));
-      console.log(mt);
+      // mt = (await meetupBaseInstance.meetups.call(0));
+      // console.log(mt);
 
       pr = (await meetupBaseInstance.getPresenters.call(0));
-      console.log(pr);
+      console.log("List of presenters: " + pr);
+
+      _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
+      console.log(_registrationList);
+
+      await meetupBaseInstance.joinNextMeetup("Zeming Yu", {from: admin});
+      await meetupBaseInstance.joinNextMeetup("Andrew", {from: attendee1});
+      _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
+      console.log(_registrationList);
 
 
     });

@@ -122,6 +122,11 @@ contract MeetupBase is MeetupAccessControl {
 		return meetups[i].presenters;
 	}
 
+    function getRegistrationList(uint i) public view returns (address[]){
+        return meetups[i].registrationList;
+    }
+
+
 
     function joinNextMeetup (bytes32 _userName)
         public        
