@@ -118,6 +118,11 @@ contract MeetupBase is MeetupAccessControl {
         return newMeetupId;
     }
 
+	function getPresenters(uint i) public view returns (address[]){
+		return meetups[i].presenters;
+	}
+
+
     function joinNextMeetup (bytes32 _userName)
         public        
         // returns (bool)
