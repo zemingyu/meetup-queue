@@ -22,6 +22,8 @@ Reward people for regular attendance and contribution
 
 Penalise people for late cancellation and no show's
 
+Most importantly, use this project as an opportunity to learn to write a diverse range of smart contracts
+
 ## Background
 
 [BokkyPooBahs-Ethereum-Workshop](https://www.meetup.com/BokkyPooBahs-Ethereum-Workshop/) has become so popular that the available spots often get fully booked out within a few minutes. Since the meetup is about blockchain, why not solving this problem using blockchain?
@@ -34,7 +36,9 @@ Penalise people for late cancellation and no show's
 - [ ] Last minute auction
 - [ ] Insurance pool for points penalty
 - [ ] Borrowing/lending points
-- [ ] Borrowing/lending points
+- [ ] Reward points for projects - allow users to submit a github repo
+- [ ] Monthly community voting - to decide which gitub repo to award points to
+- [ ] Distribute award points based on number of commits
 - [ ] Replace points with an ERC20 token (which can only be earned, but not bought)
 - [ ] Web frontend
 - [ ] App
