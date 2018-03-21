@@ -53,10 +53,23 @@ contract('MeetupBase', function([admin, organiser, assistant1, assistant2,
       assert.equal(await meetupBaseInstance.assistantAddress_2(), assistant2);
     });
 
+    it('can convert user name to address', async () => {
+      assert.equal(await meetupBaseInstance.users("Zeming Yu"), admin);      
+    });
+
+    it('can convert address to user name', async () => {
+      // assert.equal(await meetupBaseInstance.users("Zeming Yu"), admin);      
+      hexUserName = await meetupBaseInstance.addressToUser(admin);
+      strUserName = web3.toAscii(hexUserName);
+      // console.log(hexUserName);
+      console.log(strUserName);      
+    });
+
+
   });
 
   describe('Meetup events', async () => {
-    it('can creat 1 meetup event', async () => {
+    it('can create 1 meetup event', async () => {
       // setup an event in 1 week's time
       beforeCount = await meetupBaseInstance.getMeetupCount();
       await meetupBaseInstance.createMeetup(60*60*24*7, 3, [organiser, presenter1], {from: organiser});
@@ -64,7 +77,7 @@ contract('MeetupBase', function([admin, organiser, assistant1, assistant2,
       assert.equal(beforeCount.toNumber(), afterCount.toNumber()-1);
     });
 
-    it('can creat 2 meetup events', async () => {
+    it('can create 2 meetup events', async () => {
       // setup an event in 1 week's time and another in 2 weeks' time
       beforeCount = await meetupBaseInstance.getMeetupCount();
       await meetupBaseInstance.createMeetup(60*60*24*7, 3, [organiser, presenter1], {from: organiser});
@@ -83,18 +96,45 @@ contract('MeetupBase', function([admin, organiser, assistant1, assistant2,
       // mt = (await meetupBaseInstance.meetups.call(0));
       // console.log(mt);
 
-      pr = (await meetupBaseInstance.getPresenters.call(0));
-      console.log("List of presenters: " + pr);
+      _presenters = (await meetupBaseInstance.getPresenters.call(0));
+      // console.log("List of presenters: " + _presenters);
 
+
+      // Before registering users
       _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
+      console.log("BEFORE...")
+      console.log("Registered User Addresses: ")
       console.log(_registrationList);
 
+      _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
+      console.log("Registered Users Names: ")
+      
+      console.log("Convert 1 element only: ")
+      console.log(web3.toAscii(_registeredUserNames[0]));      
+
+      console.log("Convert all elements: ")
+      console.log(_registeredUserNames.map(web3.toAscii));      
+
+      console.log("Try to remove extra padding: ")
+      console.log(_registeredUserNames.map(
+        (x) => {web3.toAscii(x).replace(/\u0000/g, '')}));      
+
+
+
+      // Register users
       await meetupBaseInstance.joinNextMeetup("Zeming Yu", {from: admin});
       await meetupBaseInstance.joinNextMeetup("Andrew", {from: attendee1});
+
+      // After registering users
       _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
+      console.log("AFTER...")
+      console.log("Registered User Addresses: ")
       console.log(_registrationList);
 
-
+      _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
+      console.log("Registered User Names: ")
+      console.log(_registeredUserNames.map(web3.toAscii));      
+      
     });
   });
 });

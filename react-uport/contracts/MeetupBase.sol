@@ -35,6 +35,8 @@ contract MeetupBase is MeetupAccessControl {
         // Only the top maxCapacity people will be able to enter.
         // The rest will be on the waiting list.
         address[] registrationList;
+
+        bytes32[] registeredUserNames;
     }
 
     /*** STORAGE ***/
@@ -48,6 +50,7 @@ contract MeetupBase is MeetupAccessControl {
     // Here we store the names. Make it public to automatically generate an
     // accessor function named 'users' that takes a fixed-length string as argument.
     mapping (bytes32 => address) public users;
+    mapping (address => bytes32) public addressToUser;
 
 
     // Initialise contract with the owner taking all three roles
@@ -69,7 +72,8 @@ contract MeetupBase is MeetupAccessControl {
         // );
         
         if(users[name] == 0 && name != ""){
-            users[name] = msg.sender;
+            addressToUser[msg.sender] = name;
+            users[name] = msg.sender;            
         }
     }
 
@@ -83,6 +87,7 @@ contract MeetupBase is MeetupAccessControl {
         //     msg.sender == assistantAddress_2
         // );
         if(users[name] != 0 && name != ""){
+            addressToUser[msg.sender] = "";
             users[name] = 0x0;
         }
     }
@@ -101,13 +106,22 @@ contract MeetupBase is MeetupAccessControl {
     {
 
         address[] memory _registrationList = _presenters;
+        bytes32[] memory _registeredUserNames = new bytes32[](_presenters.length);
+
+        // Map address to names
+        for (uint i = 0; i < _presenters.length; i++) {
+            _registeredUserNames[i] = addressToUser[_presenters[i]];
+        }      
+        
+
         
         Meetup memory _meetup = Meetup({            
             birthTime: uint64(now),
             startTime: uint64(now + _timeUntilMeetup),            
             maxCapacity: _maxCapacity,
             presenters: _presenters,
-            registrationList: _registrationList
+            registrationList: _registrationList,
+            registeredUserNames: _registeredUserNames
         });
 
         uint256 newMeetupId = meetups.push(_meetup) - 1 ;
@@ -118,6 +132,7 @@ contract MeetupBase is MeetupAccessControl {
         return newMeetupId;
     }
 
+
 	function getPresenters(uint i) public view returns (address[]){
 		return meetups[i].presenters;
 	}
@@ -126,6 +141,9 @@ contract MeetupBase is MeetupAccessControl {
         return meetups[i].registrationList;
     }
 
+    function getRegisteredUserNames(uint i) public view returns (bytes32[]){
+        return meetups[i].registeredUserNames;
+    }
 
 
     function joinNextMeetup (bytes32 _userName)
@@ -150,6 +168,7 @@ contract MeetupBase is MeetupAccessControl {
 
         
         _meetup.registrationList.push(msg.sender);
+        _meetup.registeredUserNames.push(_userName);
 
     }
 
