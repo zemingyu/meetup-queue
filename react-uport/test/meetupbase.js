@@ -102,23 +102,16 @@ contract('MeetupBase', function([admin, organiser, assistant1, assistant2,
 
       // Before registering users
       _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
+      _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
+
       console.log("BEFORE...")
       console.log("Registered User Addresses: ")
       console.log(_registrationList);
-
-      _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
-      console.log("Registered Users Names: ")
-      
-      console.log("Convert 1 element only: ")
-      console.log(web3.toAscii(_registeredUserNames[0]));      
-
-      console.log("Convert all elements: ")
-      console.log(_registeredUserNames.map(web3.toAscii));      
-
-      console.log("Try to remove extra padding: ")
+            console.log("Registered Users Names: ")            
       console.log(_registeredUserNames.map(
-        (x) => {web3.toAscii(x).replace(/\u0000/g, '')}));      
-
+        (x) => {return web3.toAscii(x).replace(/\u0000/g, '')}));      
+      // console.log(_registeredUserNames.map(
+      //   (x) => {return web3.toUtf8(x)}));      
 
 
       // Register users
@@ -127,13 +120,14 @@ contract('MeetupBase', function([admin, organiser, assistant1, assistant2,
 
       // After registering users
       _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
+      _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
+
       console.log("AFTER...")
       console.log("Registered User Addresses: ")
       console.log(_registrationList);
-
-      _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
-      console.log("Registered User Names: ")
-      console.log(_registeredUserNames.map(web3.toAscii));      
+      console.log("Registered Users Names: ")            
+      console.log(_registeredUserNames.map(
+        (x) => {return web3.toAscii(x).replace(/\u0000/g, '')}));      
       
     });
   });
