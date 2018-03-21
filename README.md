@@ -27,6 +27,18 @@ Penalise people for late cancellation and no show's
 [BokkyPooBahs-Ethereum-Workshop](https://www.meetup.com/BokkyPooBahs-Ethereum-Workshop/) has become so popular that the available spots often get fully booked out within a few minutes. Since the meetup is about blockchain, why not solving this problem using blockchain?
 
 
+## Features
+- [x] Basic solidity contract
+- [ ] Authenticate users before each event
+- [ ] Reward/ deduct points
+- [ ] Last minute auction
+- [ ] Insurance pool for points penalty
+- [ ] Borrowing/lending points
+- [ ] Borrowing/lending points
+- [ ] Replace points with an ERC20 token (which can only be earned, but not bought)
+- [ ] Web frontend
+- [ ] App
+
 ## Reasons for using the Ropsten network 
 
 - No transaction cost (ETH can be obtained for free)
@@ -69,6 +81,7 @@ Accounts are checked against the masterlist
 - Show up: +10 
 
 #### How to lose points
+- To participate in events, need to put in a deposit of 50 points
 - no show, no cancellation (or cancellation after event start time): -50
 - late penalty:
   - more than 24 hours before the event: 0 
@@ -82,28 +95,21 @@ Accounts are checked against the masterlist
 - Waiting list also ranked by points, not by when you register
 - Use registration order for tie-breakers
 
-## Last minute auction system
+## Last minute auction system (replacing the waiting list)
 - Spots freed up in the last 3 hours are available for auctions 
 - Auction the spots with your points
+- Auction starts when at least one spot opens up
+- Auction ends 1 hour before the meetup
 
 ## Smart contract design
 
-### Contract 1 - master contract
+### Contract 1 - meetup base, inherits access control
 
 #### Variables
 - Meetup owner – multip owners, allow transfers 
 - Meetup acconts - Array of addresses, mapped to meetup names 
 - Array of meetup events (contract addresses) 
 
-####  Functions
-- Add account  
-- Create a new meetup event – ownly owners can do this 
-
-### Contract 2 - one contract for each meetup up event
-
-The pupose is to store the information relating to the event
-
-#### Variables
 **Meetup event (struct)** 
 
 - Organiser 
@@ -112,6 +118,18 @@ The pupose is to store the information relating to the event
 - Date and time 
 - Maximum capacity 
 - Late cancellation period
+
+####  Functions
+
+- Register user
+- Deregister user
+- Create a new meetup event – ownly organiser and assistants can do this
+- Cancel a meetup event – ownly organiser and assistants can do this
+- Register for a meetup event
+- Deregister from a meetup event
+- Enter into last minute auction
+
+
 
 ## Boilderplate
 http://truffleframework.com/boxes/react-uport
