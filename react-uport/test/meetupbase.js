@@ -1,6 +1,6 @@
 // const Web3 = require('web3');
 // const web3 = new Web3(ganache.provider());
-
+const moment = require('moment');
 
 var MeetupBase = artifacts.require("./MeetupBase.sol");
 
@@ -20,6 +20,19 @@ const timeTravel = function (time) {
 }
 //To add some time, just use this:
 // await timeTravel(86400 * 3) //3 days later
+
+
+// Convert string to datetime
+// datetimeStr must be in this format: '17-09-2013 10:08'
+const parseDateTime = function (dateTimeStr) {
+  var dateTimeParts = dateTimeStr.split(' '),
+      timeParts = dateTimeParts[1].split(':'),
+      dateParts = dateTimeParts[0].split('-'),
+      dateTime;
+  dateTime = new Date(dateParts[2], parseInt(dateParts[1], 10) - 1, dateParts[0], timeParts[0], timeParts[1]);
+  return dateTime.getTime()/1000; // convert to seconds
+}
+
 
 contract('MeetupBase', function([admin, organiser, assistant1, assistant2, 
                                  presenter1, attendee1, anyone]) {
@@ -68,68 +81,80 @@ contract('MeetupBase', function([admin, organiser, assistant1, assistant2,
 
   });
 
+
   describe('Meetup events', async () => {
+
     it('can create 1 meetup event', async () => {
-      // setup an event in 1 week's time
-      beforeCount = await meetupBaseInstance.getMeetupCount();
-      await meetupBaseInstance.createMeetup(60*60*24*7, 3, [organiser, presenter1], {from: organiser});
-      afterCount = await meetupBaseInstance.getMeetupCount();
-      assert.equal(beforeCount.toNumber(), afterCount.toNumber()-1);
-    });
+      dateTimeStr = '22-03-2018 14:16';
+      dateTimeStr2 = moment.unix(parseDateTime(dateTimeStr)).format('dddd, MMMM Do, YYYY h:mm:ss A');
 
-    it('can create 2 meetup events', async () => {
-      // setup an event in 1 week's time and another in 2 weeks' time
-      beforeCount = await meetupBaseInstance.getMeetupCount();
-      await meetupBaseInstance.createMeetup(60*60*24*7, 3, [organiser, presenter1], {from: organiser});
-      await meetupBaseInstance.createMeetup(60*60*24*14, 3, [assistant1, assistant2], {from: assistant1});
-      afterCount = await meetupBaseInstance.getMeetupCount();
-      assert.equal(beforeCount.toNumber(), afterCount.toNumber()-2);
-    });
+      console.log(parseDateTime(dateTimeStr));
+      console.log(dateTimeStr2);
+      // console.log(parseDateTime('22-03-2018 10:15').toString());// This only works in a webpage
 
-    it('allows people to join the meetup event', async () => {
-      // setup an event in 1 week's time
       beforeCount = await meetupBaseInstance.getMeetupCount();
-      await meetupBaseInstance.createMeetup(60*60*24*7, 4, [organiser, presenter1, anyone], {from: organiser});
+      // await timeTravel(86400 * 1); //9 days later
+      // await web3.currentProvider.send({jsonrpc: "2.0", method: "evm_mine", params: [], id: 0});
+      await meetupBaseInstance.createMeetup(parseDateTime(dateTimeStr), 3, [organiser, presenter1], {from: organiser});
       afterCount = await meetupBaseInstance.getMeetupCount();
       assert.equal(beforeCount.toNumber(), afterCount.toNumber()-1);
 
-      // mt = (await meetupBaseInstance.meetups.call(0));
-      // console.log(mt);
+      console.log(await meetupBaseInstance.meetups.call(0))
+    });
 
-      _presenters = (await meetupBaseInstance.getPresenters.call(0));
-      // console.log("List of presenters: " + _presenters);
+    // it('can create 2 meetup events', async () => {
+    //   // setup an event in 1 week's time and another in 2 weeks' time
+    //   beforeCount = await meetupBaseInstance.getMeetupCount();
+    //   await meetupBaseInstance.createMeetup(60*60*24*7, 3, [organiser, presenter1], {from: organiser});
+    //   await meetupBaseInstance.createMeetup(60*60*24*14, 3, [assistant1, assistant2], {from: assistant1});
+    //   afterCount = await meetupBaseInstance.getMeetupCount();
+    //   assert.equal(beforeCount.toNumber(), afterCount.toNumber()-2);
+    // });
+
+    // it('allows people to join the meetup event', async () => {
+    //   // setup an event in 1 week's time
+    //   beforeCount = await meetupBaseInstance.getMeetupCount();
+    //   await meetupBaseInstance.createMeetup(60*60*24*7, 4, [organiser, presenter1, anyone], {from: organiser});
+    //   afterCount = await meetupBaseInstance.getMeetupCount();
+    //   assert.equal(beforeCount.toNumber(), afterCount.toNumber()-1);
+
+    //   // mt = (await meetupBaseInstance.meetups.call(0));
+    //   // console.log(mt);
+
+    //   _presenters = (await meetupBaseInstance.getPresenters.call(0));
+    //   // console.log("List of presenters: " + _presenters);
 
 
-      // Before registering users
-      _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
-      _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
+    //   // Before registering users
+    //   _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
+    //   _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
 
-      console.log("BEFORE...")
-      console.log("Registered User Addresses: ")
-      console.log(_registrationList);
-            console.log("Registered Users Names: ")            
-      console.log(_registeredUserNames.map(
-        (x) => {return web3.toAscii(x).replace(/\u0000/g, '')}));      
-      // console.log(_registeredUserNames.map(
-      //   (x) => {return web3.toUtf8(x)}));      
+    //   console.log("BEFORE...")
+    //   console.log("Registered User Addresses: ")
+    //   console.log(_registrationList);
+    //         console.log("Registered Users Names: ")            
+    //   console.log(_registeredUserNames.map(
+    //     (x) => {return web3.toAscii(x).replace(/\u0000/g, '')}));      
+    //   // console.log(_registeredUserNames.map(
+    //   //   (x) => {return web3.toUtf8(x)}));      
 
 
-      // Register users
-      await meetupBaseInstance.joinNextMeetup("Zeming Yu", {from: admin});
-      await meetupBaseInstance.joinNextMeetup("Andrew", {from: attendee1});
+    //   // Register users
+    //   await meetupBaseInstance.joinNextMeetup("Zeming Yu", {from: admin});
+    //   await meetupBaseInstance.joinNextMeetup("Andrew", {from: attendee1});
 
-      // After registering users
-      _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
-      _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
+    //   // After registering users
+    //   _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
+    //   _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
 
-      console.log("AFTER...")
-      console.log("Registered User Addresses: ")
-      console.log(_registrationList);
-      console.log("Registered Users Names: ")            
-      console.log(_registeredUserNames.map(
-        (x) => {return web3.toAscii(x).replace(/\u0000/g, '')}));      
+    //   console.log("AFTER...")
+    //   console.log("Registered User Addresses: ")
+    //   console.log(_registrationList);
+    //   console.log("Registered Users Names: ")            
+    //   console.log(_registeredUserNames.map(
+    //     (x) => {return web3.toAscii(x).replace(/\u0000/g, '')}));      
       
-    });
+    // });
   });
 });
 

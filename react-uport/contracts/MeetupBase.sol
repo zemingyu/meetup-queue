@@ -11,16 +11,16 @@ import "./MeetupAccessControl.sol";
 contract MeetupBase is MeetupAccessControl {
     /*** EVENTS ***/
 
-    // @dev The Birth event is fired whenever a new meetup event comes into existence. 
+    // @dev The Creation event is fired whenever a new meetup event comes into existence. 
     //      These meetup events are created by event organiser or assistants 
-    event Birth(uint64 timeUntilMeetup, uint8 maxCapacity);
+    event Creation(uint64 startTime, uint8 maxCapacity);
 
 
     /*** DATA TYPES ***/
 
     struct Meetup {
         // The timestamp from the block when the meetup event is created.
-        uint64 birthTime;
+        uint64 createTime;
 
         // The timestamp from the block when the meetup event is scheduled to start.
         uint64 startTime;
@@ -45,7 +45,7 @@ contract MeetupBase is MeetupAccessControl {
     Meetup[] public meetups;
 
     /// @dev A mapping from user address to points
-    mapping (address => int256) public userToPoints;
+    mapping (address => int256) public addressToPoints;
 
     // Here we store the names. Make it public to automatically generate an
     // accessor function named 'users' that takes a fixed-length string as argument.
@@ -74,6 +74,7 @@ contract MeetupBase is MeetupAccessControl {
         if(users[name] == 0 && name != ""){
             addressToUser[msg.sender] = name;
             users[name] = msg.sender;            
+            addressToPoints[msg.sender] = 100;
         }
     }
 
@@ -96,7 +97,7 @@ contract MeetupBase is MeetupAccessControl {
     // @param _maxCapacity Maximum capacity of the meeting.
     // @param _presenters Addresses of presenters.
     function createMeetup (            
-        uint64 _timeUntilMeetup,        
+        uint64 _startTime,        
         uint8 _maxCapacity,       
         address[] _presenters
     )
@@ -104,6 +105,12 @@ contract MeetupBase is MeetupAccessControl {
         onlyAssistant() 
         returns (uint256)
     {
+
+        // Can't create a meetup in the past
+        require(uint64(_startTime) > uint64(now));
+
+        // Must have at least 1 extra spot
+        require(_maxCapacity > _presenters.length);
 
         address[] memory _registrationList = _presenters;
         bytes32[] memory _registeredUserNames = new bytes32[](_presenters.length);
@@ -116,8 +123,8 @@ contract MeetupBase is MeetupAccessControl {
 
         
         Meetup memory _meetup = Meetup({            
-            birthTime: uint64(now),
-            startTime: uint64(now + _timeUntilMeetup),            
+            createTime: uint64(now),
+            startTime: uint64(_startTime),
             maxCapacity: _maxCapacity,
             presenters: _presenters,
             registrationList: _registrationList,
@@ -126,8 +133,8 @@ contract MeetupBase is MeetupAccessControl {
 
         uint256 newMeetupId = meetups.push(_meetup) - 1 ;
 
-        // emit the birth event
-        Birth(_timeUntilMeetup, _maxCapacity);
+        // emit the creation event
+        Creation(_startTime, _maxCapacity);
 
         return newMeetupId;
     }
