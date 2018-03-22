@@ -3,6 +3,7 @@
 const moment = require('moment');
 
 var MeetupBase = artifacts.require("./MeetupBase.sol");
+var meetupBaseInstance;
 
 
 const timeTravel = function (time) {
@@ -34,10 +35,21 @@ const parseDateTime = function (dateTimeStr) {
 }
 
 
+const getMeetupRegisterdUsers = async () => {
+
+  console.log("Registered User Addresses: ")
+  console.log(_registrationList);
+  console.log("Registered Users Names: ")            
+  console.log(_registeredUserNames.map(
+    (x) => {return web3.toAscii(x).replace(/\u0000/g, '')}));      
+  // console.log(_registeredUserNames.map(
+  //   (x) => {return web3.toUtf8(x)}));      
+
+}
+
 contract('MeetupBase', function([admin, organiser, assistant1, assistant2, 
                                  presenter1, attendee1, anyone]) {
-  let meetupBaseInstance;
-
+  
   beforeEach('setup contract for each test', async function () {
     // transfer roles
     meetupBaseInstance = await MeetupBase.new();    
@@ -56,6 +68,15 @@ contract('MeetupBase', function([admin, organiser, assistant1, assistant2,
 
     // let balance = await web3.eth.getBalance(admin);    
     // console.log(web3.fromWei(balance.toNumber(), 'ether'));
+
+    // setup an event in 1 week's time
+    dateTimeStr = '22-04-2018 14:16';
+
+    beforeCount = await meetupBaseInstance.getMeetupCount();
+    await meetupBaseInstance.createMeetup(parseDateTime(dateTimeStr), 4, [organiser, presenter1], {from: organiser});
+    afterCount = await meetupBaseInstance.getMeetupCount();
+    assert.equal(beforeCount.toNumber(), afterCount.toNumber()-1);
+
 
   });
 
@@ -112,51 +133,62 @@ contract('MeetupBase', function([admin, organiser, assistant1, assistant2,
     // });
 
     it('allows people to join the meetup event', async () => {
-      // setup an event in 1 week's time
-      dateTimeStr = '22-04-2018 14:16';
-
-      beforeCount = await meetupBaseInstance.getMeetupCount();
-      await meetupBaseInstance.createMeetup(parseDateTime(dateTimeStr), 4, [organiser, presenter1], {from: organiser});
-      afterCount = await meetupBaseInstance.getMeetupCount();
-      assert.equal(beforeCount.toNumber(), afterCount.toNumber()-1);
-
       // mt = (await meetupBaseInstance.meetups.call(0));
       // console.log(mt);
 
       // _presenters = (await meetupBaseInstance.getPresenters.call(0));
       // console.log("List of presenters: " + _presenters);
 
-
       // Before registering users
+      console.log("BEFORE...")
       _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
       _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
-
-      console.log("BEFORE...")
-      console.log("Registered User Addresses: ")
-      console.log(_registrationList);
-      console.log("Registered Users Names: ")            
-      console.log(_registeredUserNames.map(
-        (x) => {return web3.toAscii(x).replace(/\u0000/g, '')}));      
-      // console.log(_registeredUserNames.map(
-      //   (x) => {return web3.toUtf8(x)}));      
-
+      getMeetupRegisterdUsers(0);
 
       // Register users
       await meetupBaseInstance.joinNextMeetup({from: admin});
       // await meetupBaseInstance.joinNextMeetup({from: anyone}); //Fails as anyone is not registered
 
       // After registering users
+      console.log("AFTER...")
       _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
       _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
-
-      console.log("AFTER...")
-      console.log("Registered User Addresses: ")
-      console.log(_registrationList);
-      console.log("Registered Users Names: ")            
-      console.log(_registeredUserNames.map(
-        (x) => {return web3.toAscii(x).replace(/\u0000/g, '')}));      
+      getMeetupRegisterdUsers(0);
       
     });
+
+    it('allows people to leave the meetup event', async () => {
+      // Before registering users
+      console.log("BEFORE...")
+      _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
+      _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
+      getMeetupRegisterdUsers(0);
+
+      // Register users
+      await meetupBaseInstance.joinNextMeetup({from: admin});
+      // await meetupBaseInstance.joinNextMeetup({from: anyone}); //Fails as anyone is not registered
+
+      // After registering users
+      console.log("AFTER Joining...")
+      _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
+      _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
+      getMeetupRegisterdUsers(0);
+
+      // Leave
+      await meetupBaseInstance.leaveNextMeetup({from: admin});
+      await meetupBaseInstance.leaveNextMeetup({from: organiser});
+      await meetupBaseInstance.leaveNextMeetup({from: presenter1}); //last person is not allowed to leave
+      
+      
+      // After leaving
+      console.log("AFTER Leaving...")
+      _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
+      _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
+      getMeetupRegisterdUsers(0);
+
+      
+    });
+
   });
 });
 

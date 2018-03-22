@@ -174,41 +174,51 @@ contract MeetupBase is MeetupAccessControl {
             }
         }      
 
-
+        bytes32 _userName = addressToUser[msg.sender];
         _meetup.registrationList.push(msg.sender);
-        _meetup.registeredUserNames.push(addressToUser[msg.sender]);
+        _meetup.registeredUserNames.push(_userName);
         // deduct deposit
         // addressToPoints[msg.sender] = addressToPoints[msg.sender] - 50;
 
     }
 
-    // function leaveNextMeetup (bytes32 _userName)
-    //     public        
-    //     // returns (bool)
-    // {
-    //     require(userToAddress[_userName] == msg.sender);
-    //     require(userToAddress[_userName] != address(0));        
+    function leaveNextMeetup ()
+        public        
+        // returns (bool)
+    {
+        // Can't leave a meetup that has already started.
+        require(now < _meetup.startTime);        
 
-    //     uint256 _meetupId = meetups.length - 1;
-    //     Meetup storage _meetup = meetups[_meetupId];
+        // Have to be a registered user
+        require(addressToUser[msg.sender] > 0);        
 
-    //     // Can't join a meetup that has already started.
-    //     require(now < _meetup.startTime);        
+        uint256 _meetupId = meetups.length - 1;
+        Meetup storage _meetup = meetups[_meetupId];
 
-    //     // Can't join twice
-    //     for (uint i = 0; i < _meetup.registrationList.length; i++) {
-    //         if (_meetup.registrationList[i] == msg.sender) {
-    //             revert();
-    //         }
-    //     }      
+        // Have to be registered to leave
+        bool hasJoined = false;
+        for (uint i = 0; i < _meetup.registrationList.length; i++) {
+            if (_meetup.registrationList[i] == msg.sender) {
+                hasJoined = true;
 
-        
-    //     _meetup.registrationList.push(msg.sender);
-    //     _meetup.registeredUserNames.push(_userName);
-    //     // deduct deposit
-    //     // addressToPoints[msg.sender] = addressToPoints[msg.sender] - 50;
+                // can't leave the meetup if there's only one person!
+                if (_meetup.registrationList.length > 1) {
+                    // shift the last entry to the delted entry
+                    _meetup.registrationList[i] = _meetup.registrationList[_meetup.registrationList.length-1];
+                    _meetup.registeredUserNames[i] = _meetup.registeredUserNames[_meetup.registrationList.length-1];
 
-    // }
+                    // delete the last entry
+                    delete(_meetup.registrationList[_meetup.registrationList.length-1]);
+                    delete(_meetup.registeredUserNames[_meetup.registrationList.length-1]);
+
+                    // update length
+                    _meetup.registrationList.length--;
+                    _meetup.registeredUserNames.length--;
+                }                
+            }
+        }      
+        require(hasJoined);
+    }
 
     function getMeetupCount () public view returns (uint256) {
         return meetups.length;

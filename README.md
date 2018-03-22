@@ -30,10 +30,12 @@ Most importantly, use this project as an opportunity to learn to write a diverse
 
 
 ## Features
-- [x] Basic solidity contract
+- [x] Admin rights, create a meetup event
+- [x] Register and deregister user
+- [x] Join and leave an event
+- [ ] Last minute auction - allow people to bid for freed up spots
 - [ ] Authenticate users before each event
 - [ ] Reward/ deduct points
-- [ ] Last minute auction
 - [ ] Insurance pool for points penalty
 - [ ] Borrowing/lending points
 - [ ] Reward points for projects - allow users to submit a github repo
