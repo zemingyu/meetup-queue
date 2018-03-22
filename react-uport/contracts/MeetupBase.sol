@@ -49,7 +49,7 @@ contract MeetupBase is MeetupAccessControl {
 
     // Here we store the names. Make it public to automatically generate an
     // accessor function named 'users' that takes a fixed-length string as argument.
-    mapping (bytes32 => address) public users;
+    mapping (bytes32 => address) public userToAddress;
     mapping (address => bytes32) public addressToUser;
 
 
@@ -65,15 +65,15 @@ contract MeetupBase is MeetupAccessControl {
     // Also, we don't want them to register "" as their name.
     function registerUser(bytes32 name) public {
         // require(
-        //     msg.sender == users[name] ||
+        //     msg.sender == userToAddress[name] ||
         //     msg.sender == organiserAddress ||
         //     msg.sender == assistantAddress_1 ||
         //     msg.sender == assistantAddress_2
         // );
         
-        if(users[name] == 0 && name != ""){
+        if(userToAddress[name] == 0 && name != ""){
             addressToUser[msg.sender] = name;
-            users[name] = msg.sender;            
+            userToAddress[name] = msg.sender;            
             addressToPoints[msg.sender] = 100;
         }
     }
@@ -87,9 +87,9 @@ contract MeetupBase is MeetupAccessControl {
         //     msg.sender == assistantAddress_1 ||
         //     msg.sender == assistantAddress_2
         // );
-        if(users[name] != 0 && name != ""){
+        if(userToAddress[name] != 0 && name != ""){
             addressToUser[msg.sender] = "";
-            users[name] = 0x0;
+            userToAddress[name] = 0x0;
         }
     }
 
@@ -153,12 +153,13 @@ contract MeetupBase is MeetupAccessControl {
     }
 
 
-    function joinNextMeetup (bytes32 _userName)
+    function joinNextMeetup ()
         public        
         // returns (bool)
     {
-        require(users[_userName] == msg.sender);
-        require(users[_userName] != address(0));        
+        // require(userToAddress[_userName] == msg.sender);
+        // require(userToAddress[_userName] != address(0));        
+        require(addressToUser[msg.sender] > 0);
 
         uint256 _meetupId = meetups.length - 1;
         Meetup storage _meetup = meetups[_meetupId];
@@ -173,13 +174,41 @@ contract MeetupBase is MeetupAccessControl {
             }
         }      
 
-        
+
         _meetup.registrationList.push(msg.sender);
-        _meetup.registeredUserNames.push(_userName);
+        _meetup.registeredUserNames.push(addressToUser[msg.sender]);
         // deduct deposit
         // addressToPoints[msg.sender] = addressToPoints[msg.sender] - 50;
 
     }
+
+    // function leaveNextMeetup (bytes32 _userName)
+    //     public        
+    //     // returns (bool)
+    // {
+    //     require(userToAddress[_userName] == msg.sender);
+    //     require(userToAddress[_userName] != address(0));        
+
+    //     uint256 _meetupId = meetups.length - 1;
+    //     Meetup storage _meetup = meetups[_meetupId];
+
+    //     // Can't join a meetup that has already started.
+    //     require(now < _meetup.startTime);        
+
+    //     // Can't join twice
+    //     for (uint i = 0; i < _meetup.registrationList.length; i++) {
+    //         if (_meetup.registrationList[i] == msg.sender) {
+    //             revert();
+    //         }
+    //     }      
+
+        
+    //     _meetup.registrationList.push(msg.sender);
+    //     _meetup.registeredUserNames.push(_userName);
+    //     // deduct deposit
+    //     // addressToPoints[msg.sender] = addressToPoints[msg.sender] - 50;
+
+    // }
 
     function getMeetupCount () public view returns (uint256) {
         return meetups.length;
