@@ -85,7 +85,7 @@ contract('MeetupBase', function([admin, organiser, assistant1, assistant2,
   describe('Meetup events', async () => {
 
     it('can create 1 meetup event', async () => {
-      dateTimeStr = '22-03-2018 14:16';
+      dateTimeStr = '22-04-2018 14:16';
       dateTimeStr2 = moment.unix(parseDateTime(dateTimeStr)).format('dddd, MMMM Do, YYYY h:mm:ss A');
 
       console.log(parseDateTime(dateTimeStr));

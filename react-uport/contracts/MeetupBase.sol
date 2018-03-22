@@ -45,7 +45,7 @@ contract MeetupBase is MeetupAccessControl {
     Meetup[] public meetups;
 
     /// @dev A mapping from user address to points
-    mapping (address => int256) public addressToPoints;
+    mapping (address => uint256) public addressToPoints;
 
     // Here we store the names. Make it public to automatically generate an
     // accessor function named 'users' that takes a fixed-length string as argument.
@@ -176,6 +176,8 @@ contract MeetupBase is MeetupAccessControl {
         
         _meetup.registrationList.push(msg.sender);
         _meetup.registeredUserNames.push(_userName);
+        // deduct deposit
+        // addressToPoints[msg.sender] = addressToPoints[msg.sender] - 50;
 
     }
 
