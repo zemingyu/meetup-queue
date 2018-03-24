@@ -96,16 +96,30 @@ Accounts are checked against the masterlist
   - 3 – 6 hours: -10 
   - 0 - 3 hours: -15 
 
-## Queueing system
-- Based on total points 
-- Waiting list also ranked by points, not by when you register
-- Use registration order for tie-breakers
+## Initial Queueing system
+- Based on order of registration
+- If everyone who initially register comes to the event there'll be no auction
 
-## Last minute auction system (replacing the waiting list)
-- Spots freed up in the last 3 hours are available for auctions 
+## Auction system (replacing the waiting list)
+- Spots freed up in the last 24 hours are available for auctions 
 - Auction the spots with your points
-- Auction starts when at least one spot opens up
+- Auction starts as spots open up
 - Auction ends 1 hour before the meetup
+
+## Replace points with ERC20 tokens
+- Might make it easier to transfer tokens, borrow/lend tokens etc.
+
+## ERC721
+- Issue ERC721 tokens for each meetup event and each spot
+- Receive these tokens when entering the venue
+- Use ERC721 to deomstrate skill level
+- Later on: set up blockchain questions, answer them by submitting a transaction, if the answer is correct, receive an ERC721 token
+
+## Voting
+Vote for
+- Food choice
+- Projects to reward points to
+- Proposals
 
 ## Smart contract design
 
