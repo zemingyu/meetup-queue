@@ -52,6 +52,10 @@ contract MeetupBase is MeetupAccessControl {
     mapping (bytes32 => address) public userToAddress;
     mapping (address => bytes32) public addressToUser;
 
+    /// @dev An array containing food options
+    bytes32[] public foodOptions;
+
+
 
     // Initialise contract with the owner taking all three roles
     // These can later be transferred to the right person
@@ -59,6 +63,45 @@ contract MeetupBase is MeetupAccessControl {
         organiserAddress = msg.sender;
         assistantAddress_1 = msg.sender;
         assistantAddress_2 = msg.sender;
+        foodOptions = [bytes32("pizza"), "sushi", "salad", "burito", "subway"];
+    }
+
+    function addFoodOption(bytes32 _food) public onlyAssistant {
+        require(_food != '');
+
+        // Can't add the same food twice
+        for (uint i = 0; i < foodOptions.length; i++) {
+            if (foodOptions[i] == _food) {
+                revert();
+            }
+        }
+
+        foodOptions.push(_food);
+    }
+
+    function removeFoodOption(bytes32 _food) public onlyAssistant {
+        require(_food != '');
+
+        // Has to be in the food option list to be removed
+        bool isListedFood = false;
+        for (uint i = 0; i < foodOptions.length; i++) {
+            if (foodOptions[i] == _food) {
+                isListedFood = true;
+
+                // can't remove the food option if there's only one option left!
+                if (foodOptions.length > 1) {
+                    // shift the last entry to the deleted entry
+                    foodOptions[i] = foodOptions[foodOptions.length-1];                    
+
+                    // delete the last entry
+                    delete(foodOptions[foodOptions.length-1]);                    
+
+                    // update length
+                    foodOptions.length--;                    
+                }                
+            }
+        }      
+        require(isListedFood);
     }
 
     // Register the provided name with the caller address.
@@ -152,6 +195,10 @@ contract MeetupBase is MeetupAccessControl {
         return meetups[i].registeredUserNames;
     }
 
+    function getFoodOptionCount() public view returns (uint256) {
+        return foodOptions.length;
+    }
+
 
     function joinNextMeetup ()
         public        
@@ -203,7 +250,7 @@ contract MeetupBase is MeetupAccessControl {
 
                 // can't leave the meetup if there's only one person!
                 if (_meetup.registrationList.length > 1) {
-                    // shift the last entry to the delted entry
+                    // shift the last entry to the deleted entry
                     _meetup.registrationList[i] = _meetup.registrationList[_meetup.registrationList.length-1];
                     _meetup.registeredUserNames[i] = _meetup.registeredUserNames[_meetup.registrationList.length-1];
 

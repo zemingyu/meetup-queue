@@ -37,8 +37,8 @@ const parseDateTime = function (dateTimeStr) {
 
 const getMeetupRegisterdUsers = async () => {
 
-  console.log("Registered User Addresses: ")
-  console.log(_registrationList);
+  // console.log("Registered User Addresses: ")
+  // console.log(_registrationList);
   console.log("Registered Users Names: ")            
   console.log(_registeredUserNames.map(
     (x) => {return web3.toAscii(x).replace(/\u0000/g, '')}));      
@@ -70,7 +70,7 @@ contract('MeetupBase', function([admin, organiser, assistant1, assistant2,
     // console.log(web3.fromWei(balance.toNumber(), 'ether'));
 
     // setup an event in 1 week's time
-    dateTimeStr = '22-04-2018 14:16';
+    dateTimeStr = '22-06-2018 14:16';
 
     beforeCount = await meetupBaseInstance.getMeetupCount();
     await meetupBaseInstance.createMeetup(parseDateTime(dateTimeStr), 4, [organiser, presenter1], {from: organiser});
@@ -81,6 +81,34 @@ contract('MeetupBase', function([admin, organiser, assistant1, assistant2,
   });
 
   describe('Initial meetup setup', async () => {
+    it('can display food options', async () => {
+      foodOptionCount = await meetupBaseInstance.getFoodOptionCount.call();      
+
+      for (i = 0; i < foodOptionCount; i++) { 
+        // console.log(await meetupBaseInstance.foodOptions(i));        
+        console.log(web3.toAscii(await meetupBaseInstance.foodOptions(i)));
+      }      
+      // .replace(/\u0000/g, '')
+    });
+
+    it('can add food options', async () => {     
+      await meetupBaseInstance.addFoodOption("noodle", {from: organiser});    
+
+      foodOptionCount = await meetupBaseInstance.getFoodOptionCount.call();      
+      for (i = 0; i < foodOptionCount; i++) { 
+        console.log(web3.toAscii(await meetupBaseInstance.foodOptions(i)));
+      }      
+    });
+
+    it('can remove food options', async () => {     
+      await meetupBaseInstance.removeFoodOption("pizza", {from: organiser});    
+
+      foodOptionCount = await meetupBaseInstance.getFoodOptionCount.call();      
+      for (i = 0; i < foodOptionCount; i++) { 
+        console.log(web3.toAscii(await meetupBaseInstance.foodOptions(i)));
+      }      
+    });
+
     it('has initial organiser and assistants', async () => {
       assert.equal(await meetupBaseInstance.organiserAddress(), organiser);
       assert.equal(await meetupBaseInstance.assistantAddress_1(), assistant1);
@@ -99,29 +127,28 @@ contract('MeetupBase', function([admin, organiser, assistant1, assistant2,
       console.log(strUserName);      
     });
 
-
   });
 
 
   describe('Meetup events', async () => {
 
-    // it('can create 1 meetup event', async () => {
-    //   dateTimeStr = '22-04-2018 14:16';
-    //   dateTimeStr2 = moment.unix(parseDateTime(dateTimeStr)).format('dddd, MMMM Do, YYYY h:mm:ss A');
+    it('can create 1 meetup event', async () => {
+      dateTimeStr = '22-04-2018 14:16';
+      dateTimeStr2 = moment.unix(parseDateTime(dateTimeStr)).format('dddd, MMMM Do, YYYY h:mm:ss A');
 
-    //   console.log(parseDateTime(dateTimeStr));
-    //   console.log(dateTimeStr2);
-    //   // console.log(parseDateTime('22-03-2018 10:15').toString());// This only works in a webpage
+      // console.log(parseDateTime(dateTimeStr));
+      // console.log(dateTimeStr2);
+      // console.log(parseDateTime('22-03-2018 10:15').toString());// This only works in a webpage
 
-    //   beforeCount = await meetupBaseInstance.getMeetupCount();
-    //   // await timeTravel(86400 * 1); //9 days later
-    //   // await web3.currentProvider.send({jsonrpc: "2.0", method: "evm_mine", params: [], id: 0});
-    //   await meetupBaseInstance.createMeetup(parseDateTime(dateTimeStr), 3, [organiser, presenter1], {from: organiser});
-    //   afterCount = await meetupBaseInstance.getMeetupCount();
-    //   assert.equal(beforeCount.toNumber(), afterCount.toNumber()-1);
+      beforeCount = await meetupBaseInstance.getMeetupCount();
+      // await timeTravel(86400 * 1); //9 days later
+      // await web3.currentProvider.send({jsonrpc: "2.0", method: "evm_mine", params: [], id: 0});
+      await meetupBaseInstance.createMeetup(parseDateTime(dateTimeStr), 3, [organiser, presenter1], {from: organiser});
+      afterCount = await meetupBaseInstance.getMeetupCount();
+      assert.equal(beforeCount.toNumber(), afterCount.toNumber()-1);
 
-    //   console.log(await meetupBaseInstance.meetups.call(0))
-    // });
+      // console.log(await meetupBaseInstance.meetups.call(0))
+    });
 
     // it('can create 2 meetup events', async () => {
     //   // setup an event in 1 week's time and another in 2 weeks' time
@@ -132,32 +159,32 @@ contract('MeetupBase', function([admin, organiser, assistant1, assistant2,
     //   assert.equal(beforeCount.toNumber(), afterCount.toNumber()-2);
     // });
 
-    it('allows people to join the meetup event', async () => {
-      // mt = (await meetupBaseInstance.meetups.call(0));
-      // console.log(mt);
+    // it('allows people to join the meetup event', async () => {
+    //   // mt = (await meetupBaseInstance.meetups.call(0));
+    //   // console.log(mt);
 
-      // _presenters = (await meetupBaseInstance.getPresenters.call(0));
-      // console.log("List of presenters: " + _presenters);
+    //   // _presenters = (await meetupBaseInstance.getPresenters.call(0));
+    //   // console.log("List of presenters: " + _presenters);
 
-      // Before registering users
-      console.log("BEFORE...")
-      _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
-      _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
-      getMeetupRegisterdUsers(0);
+    //   // Before registering users
+    //   console.log("BEFORE...")
+    //   _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
+    //   _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
+    //   getMeetupRegisterdUsers(0);
 
-      // Register users
-      await meetupBaseInstance.joinNextMeetup({from: admin});
-      // await meetupBaseInstance.joinNextMeetup({from: anyone}); //Fails as anyone is not registered
+    //   // Register users
+    //   await meetupBaseInstance.joinNextMeetup({from: admin});
+    //   // await meetupBaseInstance.joinNextMeetup({from: anyone}); //Fails as anyone is not registered
 
-      // After registering users
-      console.log("AFTER...")
-      _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
-      _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
-      getMeetupRegisterdUsers(0);
+    //   // After registering users
+    //   console.log("AFTER...")
+    //   _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
+    //   _registeredUserNames = (await meetupBaseInstance.getRegisteredUserNames.call(0));
+    //   getMeetupRegisterdUsers(0);
       
-    });
+    // });
 
-    it('allows people to leave the meetup event', async () => {
+    it('allows people to join and leave the meetup event', async () => {
       // Before registering users
       console.log("BEFORE...")
       _registrationList = (await meetupBaseInstance.getRegistrationList.call(0));
