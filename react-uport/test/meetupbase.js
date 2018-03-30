@@ -37,24 +37,31 @@ const parseDateTime = function (dateTimeStr) {
 
 const getMeetupRegisterdUsers = async () => {
 
-  // console.log("Registered User Addresses: ")
-  // console.log(_registrationList);
-  console.log("Registered Users Names: ")            
-  console.log(_registeredUserNames.map(
-    (x) => {return web3.toAscii(x).replace(/\u0000/g, '')}));      
+  // console.log("Registered User ID's: ")
+
+  for (i = 0; i < _registrationList.length; i++) { 
+    _userId = await _registrationList[i].toNumber();
+    _userAttr = await getUserHelper(_userId);
+    console.log(_userAttr['userName'] + ": " + _userAttr['userTokens']);    
+  }
+
+  // console.log("Registered Users Names: ")            
   // console.log(_registeredUserNames.map(
-  //   (x) => {return web3.toUtf8(x)}));      
+  //   (x) => {return web3.toAscii(x).replace(/\u0000/g, '')}));      
+  // // console.log(_registeredUserNames.map(
+  // //   (x) => {return web3.toUtf8(x)}));      
 
 }
 
 const getUserHelper = async (id) => {
   let attrs = await meetupBaseInstance.getUser(id);
+  let _userTokens = (await meetupBaseInstance.balanceOf(attrs[1])).toNumber();
   return {
     userCreateTime: moment.unix(attrs[0].toNumber()).format('dddd, MMMM Do, YYYY h:mm:ss A'),
     userAddress: attrs[1],
     userName: web3.toAscii(attrs[2]).replace(/\u0000/g, ''),
-    userPoints: attrs[3].toNumber(),
-    hasDeregistered: attrs[4]
+    userTokens: _userTokens,
+    hasDeregistered: attrs[3]
   };    
 }
 
@@ -100,6 +107,7 @@ contract('MeetupBase', function([admin, organiser, assistant1, assistant2,
       await meetupBaseInstance.deregisterUser(5, {from: attendee1});      
       userAttr = await getUserHelper(5);      
       assert.equal(userAttr.hasDeregistered, true);            
+      console.log(userAttr);
     })
 
   });

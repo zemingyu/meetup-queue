@@ -10,9 +10,23 @@ A queueing system on the blockchain for meetups
 
 # About <a id="chapter-0"></a>
 
-## Discussion Questions
-
-MVP: just build the meetup mechanism to start with
+## To do list
+- [x] Admin rights, create a meetup event
+- [x] Register and deregister user
+- [x] Join and leave an event
+- [x] Add and remove food options, vote for food, find winning food option
+- [x] Implement ERC20 token interface
+- [ ] Last minute auction - allow people to bid for freed up spots
+- [ ] Authenticate users before each event
+- [ ] Reward/ deduct tokens
+- [ ] Insurance pool for tokens penalty
+- [ ] Borrowing/lending tokens
+- [ ] Reward tokens for projects - allow users to submit a github repo
+- [ ] Monthly community voting - to decide which gitub repo to award tokens to
+- [ ] Distribute award tokens based on number of commits
+- [ ] Replace tokens with an ERC20 token (which can only be earned, but not bought)
+- [ ] Web frontend
+- [ ] App
 
 ## Purpose
 
@@ -27,24 +41,6 @@ Most importantly, use this project as an opportunity to learn to write a diverse
 ## Background
 
 [BokkyPooBahs-Ethereum-Workshop](https://www.meetup.com/BokkyPooBahs-Ethereum-Workshop/) has become so popular that the available spots often get fully booked out within a few minutes. Since the meetup is about blockchain, why not solving this problem using blockchain?
-
-
-## Features
-- [x] Admin rights, create a meetup event
-- [x] Register and deregister user
-- [x] Join and leave an event
-- [x] Add and remove food options, vote for food, find winning food option
-- [ ] Last minute auction - allow people to bid for freed up spots
-- [ ] Authenticate users before each event
-- [ ] Reward/ deduct points
-- [ ] Insurance pool for points penalty
-- [ ] Borrowing/lending points
-- [ ] Reward points for projects - allow users to submit a github repo
-- [ ] Monthly community voting - to decide which gitub repo to award points to
-- [ ] Distribute award points based on number of commits
-- [ ] Replace points with an ERC20 token (which can only be earned, but not bought)
-- [ ] Web frontend
-- [ ] App
 
 ## Reasons for using the Ropsten network 
 
@@ -77,18 +73,18 @@ Accounts are checked against the masterlist
 - Only registered people are allowed to enter 
 
 ## Point incentives
-#### Earn points (non-event)
-- Every account starts with 100 points 
-- Work on group projects (discretionary, awarded by the meetup owners, maximum 1000 points per month) 
-- Telegram contribution (sharing resources etc.) (discretionary, awarded by the meetup owners, maximum 1000 points per month) 
+#### Earn tokens (non-event)
+- Every unique account starts with 100 tokens 
+- Work on group projects (discretionary, awarded by the meetup owners, maximum 1000 tokens per month) 
+- Telegram contribution (sharing resources etc.) (discretionary, awarded by the meetup owners, maximum 1000 tokens per month) 
 
-#### Earn points (per event)
-- Organise/assistantst: +30 
+#### Earn tokens (per event)
+- Organise/assist: +30 
 - Presenter: +100 
 - Show up: +10 
 
-#### How to lose points
-- To participate in events, need to put in a deposit of 50 points
+#### How to lose tokens
+- To participate in events, need to put in a deposit of 50 tokens
 - no show, no cancellation (or cancellation after event start time): -50
 - late penalty:
   - more than 24 hours before the event: 0 
@@ -103,7 +99,7 @@ Accounts are checked against the masterlist
 
 ## Auction system (replacing the waiting list)
 - Spots freed up in the last 24 hours are available for auctions 
-- Auction the spots with your points
+- Auction the spots with your tokens
 - Auction starts as spots open up
 - Auction ends 1 hour before the meetup
 
@@ -119,7 +115,7 @@ Accounts are checked against the masterlist
 ## Voting
 Vote for
 - Food choice
-- Projects to reward points to
+- Projects to reward tokens to
 - Proposals
 
 ## Smart contract design
