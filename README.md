@@ -33,6 +33,7 @@ Most importantly, use this project as an opportunity to learn to write a diverse
 - [x] Admin rights, create a meetup event
 - [x] Register and deregister user
 - [x] Join and leave an event
+- [x] Add and remove food options, vote for food, find winning food option
 - [ ] Last minute auction - allow people to bid for freed up spots
 - [ ] Authenticate users before each event
 - [ ] Reward/ deduct points
