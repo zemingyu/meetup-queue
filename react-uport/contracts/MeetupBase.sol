@@ -79,7 +79,9 @@ contract MeetupBase is ERC20, MeetupAccessControl {
     mapping(address => uint256) public balances;
     mapping(address => mapping(address => uint256)) public allowed;
 
-    uint256 public constant initialTokens = 100;
+    // Token incentives
+    uint256 public constant initialTokens = 100;   
+    
 
     /// @dev An array containing the Meetup struct for all Meetups in existence. 
     Meetup[] public meetups;

@@ -16,9 +16,9 @@ A queueing system on the blockchain for meetups
 - [x] Join and leave an event
 - [x] Add and remove food options, vote for food, find winning food option
 - [x] Implement ERC20 token interface
+- [ ] Reward/ deduct tokens
 - [ ] Last minute auction - allow people to bid for freed up spots
 - [ ] Authenticate users before each event
-- [ ] Reward/ deduct tokens
 - [ ] Insurance pool for tokens penalty
 - [ ] Borrowing/lending tokens
 - [ ] Reward tokens for projects - allow users to submit a github repo
