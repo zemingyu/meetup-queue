@@ -42,10 +42,43 @@ Most importantly, use this project as an opportunity to learn to write a diverse
 
 [BokkyPooBahs-Ethereum-Workshop](https://www.meetup.com/BokkyPooBahs-Ethereum-Workshop/) has become so popular that the available spots often get fully booked out within a few minutes. Since the meetup is about blockchain, why not solving this problem using blockchain?
 
+## UI design
+
+- /: list of meetups
+- /meetups/new: form to create a new meetup
+- /meetups/0x1234: meetup details for meetup at address 0x1234
+- /meetups/0x1234/events: event details for meetup at address 0x1234
+- /meetups/0x1234/events/new: form to create a new event for meetup at address 0x1234
+
+
 ## Reasons for using the Ropsten network 
 
 - No transaction cost (ETH can be obtained for free)
 - Low latency if putting a high enough gas price (low latency is important for event entrance and time dependent late cancellations) 
+
+## Token distribution
+
+- 100,000,000 total supply
+- 50% issued to new users
+- 30% community reward pool
+- 10% venture capital investors
+- 10% development team incentive
+
+For the 50% issued to new users, reward early adopters using these multipliers
+- User         1 -       100: 10
+- User       101 -     1,000:  8
+- User     1,001 -    10,000:  5
+- User    10,001 -   100,000:  3
+- User   100,001 - 1,000,000:  2
+- User 1,000,001 -10,000,000:  1
+
+Assuming there are 10m verified unique users
+10*100 + 8*900 + 5*9000 + 3*90000+2*900000 + 1*9000000 = 11,123,200 units
+Total tokens for new users: 50%*1000000 = 50000000
+50000000 / 11123200 = 4.4951 tokens per unit
+Round down to 4 tokens per unit (so keeping 10% as reserve)
+So for user 1 - 100, each is issued 4*10 = 40 tokens
+For user 101-1000, each is issued 4*8 = 32 tokens etc.
 
 
 ## Verification
@@ -247,4 +280,15 @@ truffle test
 
 ```bash
 yarn build
+```
+
+
+## Next js - used instead of create-react-app to build multipage UI
+
+```bash
+npm install --save next@4.1.4
+npm remove react react-dom
+npm install --save react@16 react-dom@16
+
+
 ```

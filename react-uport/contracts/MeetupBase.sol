@@ -68,11 +68,11 @@ contract MeetupBase is ERC20, MeetupAccessControl {
     /*** STORAGE ***/
 
     // constants for ERC20 standard
-    string public constant name = "BokkyPooBahs Ethereum Workshop Tokens";
-    string public constant symbol = "BPB";
-    uint8 public constant decimals = 18;
+    string public name;
+    string public symbol;
+    uint8 public decimals;
 
-    // variable total supply
+    // fixed total supply
     uint256 public totalSupply;
 
     // mapping to store tokens
@@ -102,13 +102,19 @@ contract MeetupBase is ERC20, MeetupAccessControl {
     // Initialise contract with the owner taking all three roles
     // These can later be transferred to the right person
     function MeetupBase() public {
+        name = "Meetup Tokens";
+        symbol = "MTP";
+        decimals = 18;
+        totalSupply = 1000000;
+        // admin initially hold all tokens
+        // but will distribute according to the token distribution plan
+        balances[msg.sender] = totalSupply;
+        Transfer(address(0), msg.sender, totalSupply);
+
         organiserAddress = msg.sender;
         assistantAddress_1 = msg.sender;
         assistantAddress_2 = msg.sender;
         foodOptions = [bytes32("nothing"), "pizza", "sushi", "salad", "burito", "subway"];        
-
-        // start with 0, issue 100 tokens to every new user
-        totalSupply = 0;
     }
 
 
