@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
 
-import "./SafeMath.sol";
 import "./MeetupAccessControl.sol";
+import "./Members.sol";
 
 /// @title Base contract for Meetup. Holds all common structs, events and base variables.
 
@@ -10,33 +10,107 @@ import "./MeetupAccessControl.sol";
 // https://monax.io/docs/solidity/solidity_1_the_five_types_model/
 // https://github.com/bokkypoobah/Tokens/blob/master/contracts/FixedSupplyToken.sol
 // https://github.com/EOSBetIO/EOSBet-EthereumGamblingContracts/blob/master/contracts/EOSBetBankroll.sol
+// https://github.com/bokkypoobah/DecentralisedFutureFundDAO/blob/e72ccf29b9000d236578cfd471a3dbf8a57cd021/contracts/DecentralisedFutureFundDAO.sol
 
-contract ERC20 {
-    function totalSupply() constant public returns (uint supply);
-    function balanceOf(address _owner) constant public returns (uint balance);
-    function transfer(address _to, uint _value) public returns (bool success);
-    function transferFrom(address _from, address _to, uint _value) public returns (bool success);
-    function approve(address _spender, uint _value) public returns (bool success);
-    function allowance(address _owner, address _spender) constant public returns (uint remaining);
-    event Transfer(address indexed _from, address indexed _to, uint _value);
-    event Approval(address indexed _owner, address indexed _spender, uint _value);
+// ----------------------------------------------------------------------------
+// ERC Token Standard #20 Interface
+// https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md
+// ----------------------------------------------------------------------------
+contract ERC20Interface {
+    function totalSupply() public view returns (uint);
+    function balanceOf(address tokenOwner) public view returns (uint balance);
+    function allowance(address tokenOwner, address spender) public view returns (uint remaining);
+    function transfer(address to, uint tokens) public returns (bool success);
+    function approve(address spender, uint tokens) public returns (bool success);
+    function transferFrom(address from, address to, uint tokens) public returns (bool success);
+
+    event Transfer(address indexed from, address indexed to, uint tokens);
+    event Approval(address indexed tokenOwner, address indexed spender, uint tokens);
 }
 
 
-contract MeetupBase is ERC20, MeetupAccessControl {
-    using SafeMath for *;
+// ----------------------------------------------------------------------------
+// BokkyPooBah's Token Teleportation Service Interface v1.10
+//
+// Enjoy. (c) BokkyPooBah / Bok Consulting Pty Ltd 2018. The MIT Licence.
+// ----------------------------------------------------------------------------
+contract BTTSTokenInterface is ERC20Interface {
+    uint public constant bttsVersion = 110;
+
+    bytes public constant signingPrefix = "\x19Ethereum Signed Message:\n32";
+    bytes4 public constant signedTransferSig = "\x75\x32\xea\xac";
+    bytes4 public constant signedApproveSig = "\xe9\xaf\xa7\xa1";
+    bytes4 public constant signedTransferFromSig = "\x34\x4b\xcc\x7d";
+    bytes4 public constant signedApproveAndCallSig = "\xf1\x6f\x9b\x53";
+
+    event OwnershipTransferred(address indexed from, address indexed to);
+    event MinterUpdated(address from, address to);
+    event Mint(address indexed tokenOwner, uint tokens, bool lockAccount);
+    event MintingDisabled();
+    event TransfersEnabled();
+    event AccountUnlocked(address indexed tokenOwner);
+
+    function approveAndCall(address spender, uint tokens, bytes data) public returns (bool success);
+
+    // ------------------------------------------------------------------------
+    // signed{X} functions
+    // ------------------------------------------------------------------------
+    function signedTransferHash(address tokenOwner, address to, uint tokens, uint fee, uint nonce) public view returns (bytes32 hash);
+    function signedTransferCheck(address tokenOwner, address to, uint tokens, uint fee, uint nonce, bytes sig, address feeAccount) public view returns (CheckResult result);
+    function signedTransfer(address tokenOwner, address to, uint tokens, uint fee, uint nonce, bytes sig, address feeAccount) public returns (bool success);
+
+    function signedApproveHash(address tokenOwner, address spender, uint tokens, uint fee, uint nonce) public view returns (bytes32 hash);
+    function signedApproveCheck(address tokenOwner, address spender, uint tokens, uint fee, uint nonce, bytes sig, address feeAccount) public view returns (CheckResult result);
+    function signedApprove(address tokenOwner, address spender, uint tokens, uint fee, uint nonce, bytes sig, address feeAccount) public returns (bool success);
+
+    function signedTransferFromHash(address spender, address from, address to, uint tokens, uint fee, uint nonce) public view returns (bytes32 hash);
+    function signedTransferFromCheck(address spender, address from, address to, uint tokens, uint fee, uint nonce, bytes sig, address feeAccount) public view returns (CheckResult result);
+    function signedTransferFrom(address spender, address from, address to, uint tokens, uint fee, uint nonce, bytes sig, address feeAccount) public returns (bool success);
+
+    function signedApproveAndCallHash(address tokenOwner, address spender, uint tokens, bytes _data, uint fee, uint nonce) public view returns (bytes32 hash);
+    function signedApproveAndCallCheck(address tokenOwner, address spender, uint tokens, bytes _data, uint fee, uint nonce, bytes sig, address feeAccount) public view returns (CheckResult result);
+    function signedApproveAndCall(address tokenOwner, address spender, uint tokens, bytes _data, uint fee, uint nonce, bytes sig, address feeAccount) public returns (bool success);
+
+    function mint(address tokenOwner, uint tokens, bool lockAccount) public returns (bool success);
+    function unlockAccount(address tokenOwner) public;
+    function disableMinting() public;
+    function enableTransfers() public;
+
+    // ------------------------------------------------------------------------
+    // signed{X}Check return status
+    // ------------------------------------------------------------------------
+    enum CheckResult {
+        Success,                           // 0 Success
+        NotTransferable,                   // 1 Tokens not transferable yet
+        AccountLocked,                     // 2 Account locked
+        SignerMismatch,                    // 3 Mismatch in signing account
+        InvalidNonce,                      // 4 Invalid nonce
+        InsufficientApprovedTokens,        // 5 Insufficient approved tokens
+        InsufficientApprovedTokensForFees, // 6 Insufficient approved tokens for fees
+        InsufficientTokens,                // 7 Insufficient tokens
+        InsufficientTokensForFees,         // 8 Insufficient tokens for fees
+        OverflowError                      // 9 Overflow error
+    }
+}
+
+
+contract MeetupBase is MeetupAccessControl {
+
+    using Members for Members.Data;
 
     /*** EVENTS ***/
 
     // @dev The Creation event is fired whenever a new meetup event comes into existence. 
     //      These meetup events are created by event organiser or assistants 
-    event MeeupEventCreated(uint64 startTime, uint8 maxCapacity);
-    event UserCreated(uint64 userCreateTime, uint256 userId, bytes32 userName);
+    event MeeupEventCreated(uint64 startTime, uint8 maxCapacity);    
+    event BTTSTokenUpdated(address indexed oldBTTSToken, address indexed newBTTSToken);    
+    event MemberAdded(address indexed _address, bytes32 _name, bool _governor, uint totalAfter);
+    event MemberRemoved(address indexed _address, bytes32 _name, bool _governor, uint totalAfter);
 
 
     /*** DATA TYPES ***/
 
-    struct Meetup {
+    struct MeetupEvent {
         // The timestamp from the block when the meetup event is created.
         uint64 createTime;
 
@@ -46,13 +120,13 @@ contract MeetupBase is ERC20, MeetupAccessControl {
         // Capacity of the meeting.
         uint8 maxCapacity;
 
-        // User ID of the presenters.
-        uint256[] presenters;
+        // Address of the presenters.
+        address[] presenters;
 
-        // User ID of people who register for the event.
+        // Address of people who register for the event.
         // Only the top maxCapacity people will be able to enter.
         // The rest will be on the waiting list.
-        uint256[] registrationList;
+        address[] registrationList;
 
         bytes32[] registeredUserNames;
     }
@@ -67,31 +141,21 @@ contract MeetupBase is ERC20, MeetupAccessControl {
 
     /*** STORAGE ***/
 
-    // constants for ERC20 standard
-    string public name;
-    string public symbol;
-    uint8 public decimals;
-
-    // fixed total supply
-    uint256 public totalSupply;
-
-    // mapping to store tokens
-    mapping(address => uint256) public balances;
-    mapping(address => mapping(address => uint256)) public allowed;
-
     // Token incentives
-    uint256 public constant initialTokens = 100;   
-    
+    // uint256 public constant initialTokens = 100;   
+
+    uint8 public constant TOKEN_DECIMALS = 18;
+    uint public constant TOKEN_DECIMALSFACTOR = 10 ** uint(TOKEN_DECIMALS); 
+
+    BTTSTokenInterface public bttsToken;    
+    bool public initialised;
+    Members.Data members;
+
+    uint public tokensForNewGoverningMembers = 200000 * TOKEN_DECIMALSFACTOR; 
+    uint public tokensForNewMembers = 1000 * TOKEN_DECIMALSFACTOR; 
 
     /// @dev An array containing the Meetup struct for all Meetups in existence. 
-    Meetup[] public meetups;
-    User[] public users;
-
-    /// @dev A mapping from user address to points
-    // mapping (address => uint256) public addressToPoints;
-
-    mapping (bytes32 => address) public userToAddress;
-    mapping (address => bytes32) public addressToUser;
+    MeetupEvent[] public meetupEvents;
 
     /// @dev An array containing food options
     bytes32[] public foodOptions;
@@ -99,111 +163,39 @@ contract MeetupBase is ERC20, MeetupAccessControl {
     mapping (bytes32 => uint8) public foodToVotes;
 
 
-    // Initialise contract with the owner taking all three roles
-    // These can later be transferred to the right person
-    function MeetupBase() public {
-        name = "Meetup Tokens";
-        symbol = "MTP";
-        decimals = 18;
-        totalSupply = 1000000;
-        // admin initially hold all tokens
-        // but will distribute according to the token distribution plan
-        balances[msg.sender] = totalSupply;
-        Transfer(address(0), msg.sender, totalSupply);
-
+    // // Initialise contract with the owner taking all three roles
+    // // These can later be transferred to the right person    
+    function Governance() public {
+        members.init();
         organiserAddress = msg.sender;
         assistantAddress_1 = msg.sender;
         assistantAddress_2 = msg.sender;
-        foodOptions = [bytes32("nothing"), "pizza", "sushi", "salad", "burito", "subway"];        
+        foodOptions = [bytes32("nothing"), "pizza", "sushi", "salad", "burito", "subway"];
+        initialised = false;
     }
 
-
-    function createUser(bytes32 _userName) public returns (uint256) {
-        require(msg.sender != 0 && _userName != "");
-
-        // Make sure the user is new
-        bool isNewUser = true;        
-        for (uint i = 0; i < users.length; i++) {
-            if (users[i].userAddress == msg.sender) {
-                isNewUser = false;          
-            }
-        }
-        require(isNewUser);
-
-        User memory _user = User({
-            userCreateTime: uint64(now),
-            userAddress: msg.sender,
-            userName: _userName,
-            // userPoints: 100,
-            hasDeregistered: false  
-        });
-
-        // Issue ERC20 token
-        balances[msg.sender] = initialTokens;
-        totalSupply = SafeMath.add(totalSupply, initialTokens);
-
-        uint256 _userId = users.push(_user) - 1;
-        UserCreated(uint64(now), _userId, _userName);
-        return _userId;
+    function initSetBTTSToken(address _bttsToken) public onlyOrganiser {
+        require(!initialised);
+        BTTSTokenUpdated(address(bttsToken), _bttsToken);
+        bttsToken = BTTSTokenInterface(_bttsToken);
     }
 
-    function deregisterUser(uint256 _id) public returns (bool) {
-        require(users[_id].userAddress == msg.sender);        
-        users[_id].hasDeregistered = true;
+    function initAddMember(address _address, bytes32 _name, bool _governor) public onlyOrganiser {
+        require(!initialised);
+        require(bttsToken != address(0));
+        members.add(_address, _name, _governor);
+        bttsToken.mint(_address, _governor ? tokensForNewGoverningMembers : tokensForNewMembers, false);
     }
-
-    /// @notice Returns all the relevant information about a specific user.
-    /// @param _id The ID of the user of interest.
-    function getUser(uint256 _id)
-        public
-        view
-        returns (
-        uint64 userCreateTime,
-        address userAddress,
-        bytes32 userName,
-        // uint256 userPoints,
-        bool hasDeregistered
-    ) {
-        User storage user = users[_id];
-        
-        userCreateTime = user.userCreateTime;
-        userAddress = user.userAddress;
-        userName = user.userName;
-        // userPoints = user.userPoints;
-        hasDeregistered = user.hasDeregistered;        
+    function initRemoveMember(address _address) public onlyOrganiser {
+        require(!initialised);
+        members.remove(_address);
     }
-
-    // // Register the provided name with the caller address.
-    // // Also, we don't want them to register "" as their name.
-    // function registerUser(bytes32 name) public {
-    //     // require(
-    //     //     msg.sender == userToAddress[name] ||
-    //     //     msg.sender == organiserAddress ||
-    //     //     msg.sender == assistantAddress_1 ||
-    //     //     msg.sender == assistantAddress_2
-    //     // );
-        
-    //     if(userToAddress[name] == 0 && name != ""){
-    //         addressToUser[msg.sender] = name;
-    //         userToAddress[name] = msg.sender;            
-    //         // addressToPoints[msg.sender] = 100;
-    //     }
-    // }
-
-    // // Deregister the provided name with the caller address.
-    // // Only user him/herself or assistants can deregister a user
-    // function deregisterUser(bytes32 name) public onlyAssistant {        
-    //     // require(
-    //     //     msg.sender == users[name] ||
-    //     //     msg.sender == organiserAddress ||
-    //     //     msg.sender == assistantAddress_1 ||
-    //     //     msg.sender == assistantAddress_2
-    //     // );
-    //     if(userToAddress[name] != 0 && name != ""){
-    //         addressToUser[msg.sender] = "";
-    //         userToAddress[name] = 0x0;
-    //     }
-    // }
+    function initialisationComplete() public onlyOrganiser {
+        require(!initialised);
+        require(members.length() != 0);
+        initialised = true;
+        // transferOwnershipImmediately(address(0));
+    }
 
     function addFoodOption(bytes32 _food) public onlyAssistant {
         require(_food != '');
@@ -214,7 +206,6 @@ contract MeetupBase is ERC20, MeetupAccessControl {
                 revert();
             }
         }
-
         foodOptions.push(_food);
     }
 
@@ -273,7 +264,7 @@ contract MeetupBase is ERC20, MeetupAccessControl {
     function createMeetup (            
         uint64 _startTime,        
         uint8 _maxCapacity,       
-        uint256[] _presenters,
+        address[] _presenters,
         bytes32 _food
     )
         public
@@ -290,35 +281,35 @@ contract MeetupBase is ERC20, MeetupAccessControl {
         }
         require(isValidFood);
 
+
         foodToVotes[_food] += 1;
 
 
         // Can't create a meetup in the past
-        require(uint64(_startTime) > uint64(now));
+        // require(uint64(_startTime) > uint64(now));
 
         // Must have at least 1 extra spot
         require(_maxCapacity > _presenters.length);
 
-        uint256[] memory _registrationList = _presenters;
+        address[] memory _registrationList = _presenters;
         bytes32[] memory _registeredUserNames = new bytes32[](_presenters.length);
 
         // Map address to names
-        for (uint i = 0; i < _presenters.length; i++) {
-            // _registeredUserNames[i] = addressToUser[_presenters[i]];
-            _registeredUserNames[i] = users[_presenters[i]].userName;
+        for (uint i = 0; i < _presenters.length; i++) {            
+            _registeredUserNames[i] = getMemberName(_presenters[i]);
         }        
 
         
-        Meetup memory _meetup = Meetup({            
+        MeetupEvent memory _meetupEvent = MeetupEvent({            
             createTime: uint64(now),
-            startTime: uint64(_startTime),
+            startTime: _startTime,
             maxCapacity: _maxCapacity,
             presenters: _presenters,
             registrationList: _registrationList,
             registeredUserNames: _registeredUserNames            
         });
 
-        uint256 newMeetupId = meetups.push(_meetup) - 1 ;
+        uint256 newMeetupId = meetupEvents.push(_meetupEvent) - 1 ;
 
         // emit the meetup event creation event
         MeeupEventCreated(_startTime, _maxCapacity);
@@ -327,46 +318,28 @@ contract MeetupBase is ERC20, MeetupAccessControl {
     }
 
 
-	function getPresenters(uint i) public view returns (uint256[]){
-		return meetups[i].presenters;
+	function getPresenters(uint i) public view returns (address[]){
+		return meetupEvents[i].presenters;
 	}
 
-    function getRegistrationList(uint i) public view returns (uint256[]){
-        return meetups[i].registrationList;
+    function getRegistrationList(uint i) public view returns (address[]){
+        return meetupEvents[i].registrationList;
     }
 
     function getRegisteredUserNames(uint i) public view returns (bytes32[]){
-        return meetups[i].registeredUserNames;
+        return meetupEvents[i].registeredUserNames;
     }
 
     function getFoodOptionCount() public view returns (uint256) {
         return foodOptions.length;
     }
 
-
-    function getUserId() internal view returns (uint256) {
-      bool isValidUser = false;
-      uint256 userId;
-      for (uint i = 0; i < users.length; i++) {
-        if (users[i].userAddress == msg.sender && 
-          users[i].hasDeregistered == false) {
-          isValidUser = true;
-          userId = i;
-        }
-      }  
-      require(isValidUser);
-
-      return userId;
-    }
-    
+  
     function joinNextMeetup(bytes32 _food)
         public                
         // returns (bool)
     {
-        // require(userToAddress[_userName] == msg.sender);
-        // require(userToAddress[_userName] != address(0));        
-        // require(addressToUser[msg.sender] > 0);        
-        uint256 _userId = getUserId();
+        require(members.isMember(msg.sender));        
 
         // Check if the food option is valid
         bool isValidFood = false;
@@ -380,23 +353,24 @@ contract MeetupBase is ERC20, MeetupAccessControl {
 
         foodToVotes[_food] += 1;
 
-        uint256 _meetupId = meetups.length - 1;
-        Meetup storage _meetup = meetups[_meetupId];
+        uint256 _meetupId = meetupEvents.length - 1;
+        MeetupEvent storage _meetupEvent = meetupEvents[_meetupId];
 
         // Can't join a meetup that has already started.
-        require(now < _meetup.startTime);        
+        require(now < _meetupEvent.startTime);        
 
         // Can't join twice
-        for (uint i = 0; i < _meetup.registrationList.length; i++) {
-            if (_meetup.registrationList[i] == _userId) {
+        for (uint i = 0; i < _meetupEvent.registrationList.length; i++) {
+            if (_meetupEvent.registrationList[i] == msg.sender) {
                 revert();
             }
         }      
 
         // bytes32 _userName = addressToUser[msg.sender];
-        bytes32 _userName = users[_userId].userName;
-        _meetup.registrationList.push(_userId);
-        _meetup.registeredUserNames.push(_userName);
+        // bytes32 _userName = users[_userId].userName;
+        
+        _meetupEvent.registrationList.push(msg.sender);
+        _meetupEvent.registeredUserNames.push(getMemberName(msg.sender));
 
         // deduct deposit
         // addressToPoints[msg.sender] = addressToPoints[msg.sender] - 50;
@@ -408,34 +382,37 @@ contract MeetupBase is ERC20, MeetupAccessControl {
         // returns (bool)
     {
         // Can't leave a meetup that has already started.
-        require(now < _meetup.startTime);        
+        require(now < _meetupEvent.startTime);        
 
         // Have to be a registered user
         // require(addressToUser[msg.sender] > 0);        
-        uint256 _userId = getUserId();
+        require(members.isMember(msg.sender));
+        // uint256 _userId = getUserId();
+        
+        // uint256 _userId = getUserId();
 
-        uint256 _meetupId = meetups.length - 1;
-        Meetup storage _meetup = meetups[_meetupId];
+        uint256 _meetupEventId = meetupEvents.length - 1;
+        MeetupEvent storage _meetupEvent = meetupEvents[_meetupEventId];
 
         // Have to be registered to leave
         bool hasJoined = false;
-        for (uint i = 0; i < _meetup.registrationList.length; i++) {
-            if (_meetup.registrationList[i] == _userId) {
+        for (uint i = 0; i < _meetupEvent.registrationList.length; i++) {
+            if (_meetupEvent.registrationList[i] == msg.sender) {
                 hasJoined = true;
 
                 // can't leave the meetup if there's only one person!
-                if (_meetup.registrationList.length > 1) {
+                if (_meetupEvent.registrationList.length > 1) {
                     // shift the last entry to the deleted entry
-                    _meetup.registrationList[i] = _meetup.registrationList[_meetup.registrationList.length-1];
-                    _meetup.registeredUserNames[i] = _meetup.registeredUserNames[_meetup.registrationList.length-1];
+                    _meetupEvent.registrationList[i] = _meetupEvent.registrationList[_meetupEvent.registrationList.length-1];
+                    _meetupEvent.registeredUserNames[i] = _meetupEvent.registeredUserNames[_meetupEvent.registrationList.length-1];
 
                     // delete the last entry
-                    delete(_meetup.registrationList[_meetup.registrationList.length-1]);
-                    delete(_meetup.registeredUserNames[_meetup.registrationList.length-1]);
+                    delete(_meetupEvent.registrationList[_meetupEvent.registrationList.length-1]);
+                    delete(_meetupEvent.registeredUserNames[_meetupEvent.registrationList.length-1]);
 
                     // update length
-                    _meetup.registrationList.length--;
-                    _meetup.registeredUserNames.length--;
+                    _meetupEvent.registrationList.length--;
+                    _meetupEvent.registeredUserNames.length--;
                 }                
             }
         }      
@@ -443,78 +420,51 @@ contract MeetupBase is ERC20, MeetupAccessControl {
     }
 
     function getMeetupCount () public view returns (uint256) {
-        return meetups.length;
+        return meetupEvents.length;
     }
 
 
-    ///////////////////////////////
-    // BASIC ERC20 TOKEN OPERATIONS
-    ///////////////////////////////
 
-    // ------------------------------------------------------------------------
-    // Total supply
-    // ------------------------------------------------------------------------
-    function totalSupply() public constant returns (uint) {
-        return totalSupply  - balances[address(0)];
+    // From Bokky's DFFDAO
+
+    function setBTTSToken(address _bttsToken) internal {
+        BTTSTokenUpdated(address(bttsToken), _bttsToken);
+        bttsToken = BTTSTokenInterface(_bttsToken);
+    }    
+    // function setTokensForNewGoverningMembers(uint _newToken) internal {
+    //     TokensForNewGoverningMembersUpdated(tokensForNewGoverningMembers, _newToken);
+    //     tokensForNewGoverningMembers = _newToken;
+    // }
+    // function setTokensForNewMembers(uint _newToken) internal {
+    //     TokensForNewMembersUpdated(tokensForNewMembers, _newToken);
+    //     tokensForNewMembers = _newToken;
+    // }
+    function addMember(address _address, bytes32 _name, bool _governor) internal {
+        members.add(_address, _name, _governor);
+        bttsToken.mint(_address, _governor ? tokensForNewGoverningMembers : tokensForNewMembers, false);
+    }
+    function removeMember(address _address) internal {
+        members.remove(_address);
     }
 
-    // ------------------------------------------------------------------------
-    // Get the token balance for account `tokenOwner`
-    // ------------------------------------------------------------------------
-    function balanceOf(address tokenOwner) public constant returns (uint balance) {
-        return balances[tokenOwner];
+    function numberOfMembers() public view returns (uint) {
+        return members.length();
+    }
+    function getMembers() public view returns (address[]) {
+        return members.index;
+    }
+    function getMemberData(address _address) public view returns (bool _exists, uint _index, bytes32 _name, bool _governor) {
+        Members.Member memory member = members.entries[_address];
+        return (member.exists, member.index, member.name, member.governor);
+    }
+    function getMemberName(address _address) public view returns (bytes32 _name) {
+        Members.Member memory member = members.entries[_address];
+        return (member.name);
+    }
+    function getMemberByIndex(uint _index) public view returns (address _member) {
+        return members.index[_index];
     }
 
-    // ------------------------------------------------------------------------
-    // Transfer the balance from token owner's account to `to` account
-    // - Owner's account must have sufficient balance to transfer
-    // - 0 value transfers are allowed
-    // ------------------------------------------------------------------------
-    function transfer(address to, uint tokens) public returns (bool success) {
-        balances[msg.sender] = balances[msg.sender].sub(tokens);
-        balances[to] = balances[to].add(tokens);
-        Transfer(msg.sender, to, tokens);
-        return true;
-    }
-
-    // ------------------------------------------------------------------------
-    // Transfer `tokens` from the `from` account to the `to` account
-    // 
-    // The calling account must already have sufficient tokens approve(...)-d
-    // for spending from the `from` account and
-    // - From account must have sufficient balance to transfer
-    // - Spender must have sufficient allowance to transfer
-    // - 0 value transfers are allowed
-    // ------------------------------------------------------------------------
-    function transferFrom(address from, address to, uint tokens) public returns (bool success) {
-        balances[from] = balances[from].sub(tokens);
-        allowed[from][msg.sender] = allowed[from][msg.sender].sub(tokens);
-        balances[to] = balances[to].add(tokens);
-        Transfer(from, to, tokens);
-        return true;
-    }
-
-    // ------------------------------------------------------------------------
-    // Token owner can approve for `spender` to transferFrom(...) `tokens`
-    // from the token owner's account
-    //
-    // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20-token-standard.md
-    // recommends that there are no checks for the approval double-spend attack
-    // as this should be implemented in user interfaces 
-    // ------------------------------------------------------------------------
-    function approve(address spender, uint tokens) public returns (bool success) {
-        allowed[msg.sender][spender] = tokens;
-        Approval(msg.sender, spender, tokens);
-        return true;
-    }
-
-    // ------------------------------------------------------------------------
-    // Returns the amount of tokens approved by the owner that can be
-    // transferred to the spender's account
-    // ------------------------------------------------------------------------
-    function allowance(address tokenOwner, address spender) public constant returns (uint remaining) {
-        return allowed[tokenOwner][spender];
-    }
 
     // ------------------------------------------------------------------------
     // Don't accept ETH
@@ -525,10 +475,6 @@ contract MeetupBase is ERC20, MeetupAccessControl {
   
 
 }
-
-
-
-
 
 // list of meetup members: 
 // http://api.meetup.com/BokkyPooBahs-Ethereum-Workshop/members
