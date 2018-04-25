@@ -1,7 +1,136 @@
 pragma solidity ^0.4.18;
 
-import "./MeetupAccessControl.sol";
-import "./Members.sol";
+// import "./MeetupAccessControl.sol";
+// import "./Members.sol";
+
+// Based on https://github.com/axiomzen/cryptokitties-bounty/blob/master/contracts/KittyAccessControl.sol
+contract MeetupAccessControl {
+
+  // The addresses of the accounts (or contracts) that can execute actions within each roles.
+  address public organiserAddress;
+  address public assistantAddress_1;
+  address public assistantAddress_2;
+  bool paused = false;
+
+  /// Access modifier for organiser-only functionality
+  modifier onlyOrganiser() {
+      require(msg.sender == organiserAddress);
+      _;
+  }
+
+  /// Access modifier for organiser-only functionality
+  modifier onlyAssistant() {
+      require(
+        msg.sender == organiserAddress ||
+        msg.sender == assistantAddress_1 ||
+        msg.sender == assistantAddress_2
+      );
+      _;
+  }
+
+  /// @dev Assigns a new address to act as the assistant. Only available to the current CEO.
+  /// @param _newAssistant The address of the new assistant
+  function setAssistant_1(address _newAssistant) public onlyAssistant {
+      require(_newAssistant != address(0));
+
+      assistantAddress_1 = _newAssistant;
+  }
+
+  /// @dev Assigns a new address to act as the assistant. Only available to the current CEO.
+  /// @param _newAssistant The address of the new assistant
+  function setAssistant_2(address _newAssistant) public onlyAssistant {
+      require(_newAssistant != address(0));
+
+      assistantAddress_2 = _newAssistant;
+  }
+
+
+  /// @dev Assigns a new address to act as the organiser. Only available to the current organiser.
+  /// @param _newOrganiser The address of the new organiser
+  function setOrganiser(address _newOrganiser) public onlyOrganiser {
+      require(_newOrganiser != address(0));
+
+      organiserAddress = _newOrganiser;
+  }
+
+  /// @dev Modifier to allow actions only when the contract IS NOT paused
+  modifier whenNotPaused() {
+      require(!paused);
+      _;
+  }
+
+  /// @dev Modifier to allow actions only when the contract IS paused
+  modifier whenPaused {
+      require(paused);
+      _;
+  }
+
+  /// @dev Called by any "assistant" role to pause the contract. Used only when
+  ///  a bug or exploit is detected and we need to limit damage.
+  function pause() public onlyAssistant whenNotPaused {
+      paused = true;
+  }
+
+  /// @dev Unpauses the smart contract. Can only be called by the CEO, since
+  ///  one reason we may pause the contract is when CFO or COO accounts are
+  ///  compromised.
+  function unpause() public onlyOrganiser whenPaused {
+      // can't unpause if contract was upgraded
+      paused = false;
+  }
+}
+
+
+library Members {
+    struct Member {
+        bool exists;
+        uint index;
+        bytes32 name;
+        bool governor;
+    }
+    struct Data {
+        bool initialised;
+        mapping(address => Member) entries;
+        address[] index;
+    }
+
+    event MemberAdded(address indexed _address, bytes32 _name, bool _governor, uint totalAfter);
+    event MemberRemoved(address indexed _address, bytes32 _name, bool _governor, uint totalAfter);
+
+    function init(Data storage self) public {
+        require(!self.initialised);
+        self.initialised = true;
+    }
+    function isMember(Data storage self, address _address) public view returns (bool) {
+        return self.entries[_address].exists;
+    }
+    function isGovernor(Data storage self, address _address) public view returns (bool) {
+        return self.entries[_address].governor;
+    }
+    function add(Data storage self, address _address, bytes32 _name, bool _governor) public {
+        require(!self.entries[_address].exists);
+        self.index.push(_address);
+        self.entries[_address] = Member(true, self.index.length - 1, _name, _governor);
+        MemberAdded(_address, _name, _governor, self.index.length);
+    }
+    function remove(Data storage self, address _address) public {
+        require(self.entries[_address].exists);
+        uint removeIndex = self.entries[_address].index;
+        MemberRemoved(_address, self.entries[_address].name, self.entries[_address].governor, self.index.length - 1);
+        uint lastIndex = self.index.length - 1;
+        address lastIndexAddress = self.index[lastIndex];
+        self.index[removeIndex] = lastIndexAddress;
+        self.entries[lastIndexAddress].index = removeIndex;
+        delete self.entries[_address];
+        if (self.index.length > 0) {
+            self.index.length--;
+        }
+    }
+    function length(Data storage self) public view returns (uint) {
+        return self.index.length;
+    }
+}
+
 
 /// @title Base contract for Meetup. Holds all common structs, events and base variables.
 
